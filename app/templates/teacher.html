@@ -1,0 +1,102 @@
+{% extends 'base2.html' %}
+{% from 'show_comments.html' import show_comments with context %}
+
+{% block resources %}
+{{super()}}
+<link rel="stylesheet" type="text/css" href="../static/css/teacher_style.css">
+<script src="../static/js/text_limit.js"></script>
+<script src="../static/js/submit.js"></script>
+<script src="../static/js/like.js"></script>
+<script src="../static/js/ways_of_showing.js"></script>
+{% endblock %}
+
+{% block nav_content %}
+{{super()}}
+{% endblock %}
+
+{% block main_content %}
+<div id="main_content">
+    <!--教师信息表格-->
+    <div id="table_area">
+        <table id="info_table">
+            <tr>
+                <td><p class="t_title">{{info[1]}}</p></td>
+                {% if info[10] < 1 %}
+                <td style="text-align: right; padding-right: 20px; width: 22%;"><p id="tot_score">--</p></td>
+                {% else %}
+                <td style="text-align: right; padding-right: 20px; width: 22%;"><p id="tot_score">{{info[11]}}</p></td>
+                {% endif %}
+            </tr>
+            <tr>
+                <td>{{info[3]}}</td>
+                <td style="text-align: right; padding-right: 20px; width: 22%;">{{info[10]}}人参与评分</td>
+            </tr>
+            <tr>
+                <td>{{info[4]}}</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>{{info[6]}} {{info[7]}}</td>
+                <td></td>
+            </tr>
+            <tr>
+                {% if info[10] %}
+                <td>{{info[13]}}%的人认为该老师会点名</td>
+                {% else %}
+                <td>--%的人认为该老师会点名</td>
+                {% endif %}
+                <td></td>
+            </tr>
+            <tr>
+                <td><p class="t_title">主讲课程</p></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>{{info[8]}}</td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+    <!--评论区域-->
+    <div id="comment_area">
+        <div id="comment">
+            <form action="" id="comment_form" method="POST">
+                {{form.hidden_tag()}}
+                <p style="display: inline; font-size: 1.1em;">{{form.score.label}}：</p>
+                {{form.score}}
+                <p style="display: inline; font-size: 1.1em;">{{form.whether_call_roll.label}}：</p>
+                <p style="display: inline; font-size: 1.1em;">
+                    {% for radio in form.whether_call_roll %}
+                    {{radio}}{{radio.label}}
+                    {% endfor %}
+                </p>
+                <p id="error" style="color: red; display: inline; font-size: 1.1em">
+                    {% for message in form.score.errors %}
+                    {{message}}
+                    {% endfor %}
+                    {% for message in form.whether_call_roll.errors %}
+                    {{message}}
+                    {% endfor %}
+                </p>
+                <br />
+                <!--评论框-->
+                {{form.comment}}
+                <input type="image" src="../static/img/submit.png" id="submit">
+                <p id="text-count-tip">还能输入<span id="text-count">300</span>个字符</p>
+                {{form.submit_date}}
+            </form>
+        </div>
+        <div id="messages_info">
+            <div id="rank_num"><p>{{count}}条评论</p></div>
+            <div id="rank_ways">
+                <p id="hot_comments" flag="1">人气评论</p>
+                <p id="newest_comments" flag="0">最新评论</p>
+            </div>
+            <div class="clear"></div>
+        </div>
+        <div id="messages">
+            {{show_comments(count, comments)}}
+        </div>
+    </div>
+</div>
+{% endblock %}

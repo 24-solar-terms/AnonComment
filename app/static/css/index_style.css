@@ -1,0 +1,69 @@
+#header {
+    height: 160px;
+    text-align: center;
+}
+
+#header h1 {
+    font-family: SimSun;
+    font-size: 3.5em;
+    color: rgb(27, 143, 252);
+    text-shadow: 5px 5px 5px grey;
+    padding-top: 38px;
+}
+
+#header img {
+    height: 110px;
+    width: auto;
+}
+
+.search {
+    height: 50px;
+    padding-top: 10px;
+    text-align: center;
+}
+
+.search form {
+    height: 100%;
+}
+
+.search table {
+    height: 100%;
+    margin: 0 auto;
+    border: 0;
+    border-collapse: collapse;
+}
+
+#search_bar {
+    height: 40px;
+    font-size: 1.1em;
+    width: 500px;
+}
+
+#search_button {
+    height: 40px;
+    padding: 0 25px;
+    font-size: 1.1em;
+    color: white;
+    background-color: rgb(27, 143, 252);
+    border: 0;
+}
+
+#search_button:hover {
+    cursor: pointer;
+    background-color: rgb(0, 132, 255);
+}
+
+#search_button:active {
+    background-color: rgb(7, 114, 214);
+}
+
+#num {
+    text-align: center;
+    font-size: 1.1em;
+}
+
+#num span {
+    color: red;
+    font-size: 2em;
+    
+}

@@ -1,0 +1,36 @@
+{% extends 'base1.html' %}
+
+{% block resources %}
+{{super()}}
+<link rel="stylesheet" type="text/css" href="../static/css/index_style.css">
+<script src="../static/js/count_tot_comments.js"></script>
+{% endblock %}
+
+{% block main_content %}
+<!--网页名称-大标题-->
+<div id="header">
+    <h1>匿名<img src="../static/img/icon.png" alt="">评教</h1>
+</div>
+<!--搜索框-->
+<div class="search">
+    <form action="">
+        <table>
+            <tr>
+                <td>
+                    <input type="text" name="search_bar" id="search_bar">
+                </td>
+                <td>
+                    <input type="button" name="search_button" id="search_button" value="查一下">
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+{% endblock %}
+
+{% block footer_extra_content %}
+<!--评论条数统计-->
+<div id="num">
+    <p>目前已有<span id="tot_num">0</span>条评论被留下</p>
+</div>
+{% endblock %}

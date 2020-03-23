@@ -1,0 +1,34 @@
+{% macro show_comments(count, comments) %}
+    <!--评论-->
+    {% if count %}
+    <!--有评论时-->
+        {% for comment in comments %}
+         <div class="message">
+            <div class="left">
+                <div class="message_content">
+                    <p>{{comment[2]}}</p>
+                </div>
+                <div class="post_footer">
+                    <p style="display: inline;">发布于 {{comment[4]}}</p>
+                    <p style="display: inline;">举报</p>
+                </div>
+            </div>
+            <div class="right">
+                <div class="good_bad">
+                    <input type="image" name="good" class="good" flag="0" src="../static/img/good.png">
+                    <p style="margin: 5px 0;">{{comment[3]}}</p>
+                </div>
+            </div>
+            <div class="clear"></div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <!--无评论时-->
+    <div id="no_comment">
+        <img src="../static/img/nocomment.png" alt="暂无评论">
+        <p>暂无对该老师的评论，快去评论吧~</p>
+    </div>
+    {% endif %}
+{% endmacro %}
+
+{{show_comments(count, comments)}}

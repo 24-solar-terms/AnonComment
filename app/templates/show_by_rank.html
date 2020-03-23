@@ -1,0 +1,34 @@
+{% macro show_by_rank(rank) %}
+<p id="table_head">教师评分排行榜</p>
+<table id="ranking_list">
+    <tr>
+        <th style="text-align: right;">排名</th>
+        <th>教师姓名</th>
+        <th>综合评分</th>
+    </tr>
+    {% for i, teacher in rank %}
+        {% if i <= 3 %}
+        <tr>
+            <td class="rank"><img src="../static/img/{{i}}.png"> {{i}}</td>
+            <td><a href="/{{teacher[0]}}{{teacher[2]}}">{{teacher[1]}}</a></td>
+            <td> <img src="../static/img/star.png" alt="星级"> {{teacher[6]}}</td>
+        </tr>
+        {% elif i <= 10 %}
+        <tr>
+            <td class="rank"><img src="../static/img/hot.png"> {{i}}</td>
+            <td><a href="/{{teacher[0]}}{{teacher[2]}}">{{teacher[1]}}</a></td>
+            <td> <img src="../static/img/star.png" alt="星级"> {{teacher[6]}}</td>
+        </tr>
+        {% else %}
+         <tr>
+            <td class="rank">{{i}}</td>
+            <td><a href="/{{teacher[0]}}{{teacher[2]}}">{{teacher[1]}}</a></td>
+            <td> <img src="../static/img/star.png" alt="星级"> {{teacher[6]}}</td>
+        </tr>
+        {% endif %}
+    {% endfor %}
+</table>
+<p>仅显示排名前30的老师</p>
+{% endmacro %}
+
+{{show_by_rank(rank)}}

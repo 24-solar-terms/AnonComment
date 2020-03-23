@@ -1,0 +1,86 @@
+#nav {
+    height: 90px;
+    box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+#header {
+    margin: 22px 60px;
+}
+
+#header h1{
+    display: inline;
+    font-size: 1.87em;
+    border-right: grey solid 1px;
+    padding: 0 10px;
+}
+
+#header span {
+    display: inline;
+    font-size: 1.8em;
+    padding: 0 10px;
+}
+
+#content {
+    min-height: calc(100% - 194px);
+    margin-top: 4px;
+    padding-top: 45px;
+    background-color: rgb(245, 245, 246);
+}
+
+#footer {
+    background-color: rgb(245, 245, 246);
+}
+
+#login_area {
+    width: 305px;
+    margin: 0 auto;
+    background-color: white;
+    box-shadow: 4px 4px 5px grey;
+}
+
+#login_form {
+    padding: 15px;
+    width: 305px;
+}
+
+#login_form p {
+    margin: 10px 5px;
+    font-size: 1.125em;
+    font-weight: 400;
+}
+
+#phone {
+    height: 35px;
+    width: 265px;
+    margin: 10px 5px;
+}
+
+#get_code {
+    width: 125px;
+    height: 35px;
+    margin: 10px 5px;
+}
+
+#code {
+    height: 35px;
+    width: 125px;
+    margin: 10px 5px;
+}
+
+#remember_me {
+    margin: 10px 0 10px 5px;
+}
+
+#remember_me + span {
+    font-size: 13px;
+}
+
+#validate {
+    margin: 10px 5px;
+    width: 265px;
+    height: 35px;
+    color: white;
+    background-color: rgb(27, 143, 252);
+    border: 0;
+    cursor: pointer;
+}

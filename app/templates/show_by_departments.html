@@ -1,0 +1,18 @@
+{% macro show_by_departments(table) %}
+<p id="table_head">按部门分类</p>
+<table id="teachers_table">
+    {% for department, teachers in table.items() %}
+    <tr>
+        <td class="department">{{department}}</td>
+        <td class="teachers">
+            {% for teacher in teachers %}
+            <a href="/{{teacher.split()[0]+teacher.split()[2]}}">{{teacher.split()[1]}}</a>
+            {% endfor %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+<p style="padding-bottom: 10px;">以上信息均来自青岛大学数据科学与软件工程学院官网</p>
+{% endmacro %}
+
+{{show_by_departments(table)}}

@@ -1,0 +1,158 @@
+#content {
+    background-color: #f8f8f8;
+    padding: 10px 15%;
+}
+
+#footer {
+    background-color: #f8f8f8;
+}
+
+#main_content {
+    background-color: white;
+    padding: 10px;
+    box-shadow: 4px 4px 5px grey;
+    border-radius: 10px;
+}
+
+#info_table {
+    border: 1px dashed grey;
+    margin: 0 31px;
+    width: 94%;
+    padding: 5px 10px;
+    border-radius: 10px;
+}
+
+#info_table td{
+    font-size: 1.1em;
+}
+
+.t_title {
+    color: rgb(27, 143, 252); 
+    font-size: 2em;
+}
+
+#tot_score {
+    font-size: 2em;
+}
+
+#comment_area {
+    padding: 10px 31px;
+}
+
+#score {
+    margin-right: 20px;
+    font-size: 1.1em;
+}
+
+#comment_bar {
+    font-size: 1.2em;   
+    resize: none;
+    margin-top: 10px;
+    padding: 10px;
+    height: 100px;
+    width: 90%;
+    border-radius: 10px;
+    outline: none;
+}
+
+#text-count-tip {
+    visibility: hidden;
+    margin-right: 10%;
+    text-align: right;
+    color: grey;
+}
+
+#submit_date {
+    display: none;
+}
+
+#submit {
+    outline: none;
+    margin-left: 5px;
+    margin-bottom: 10px;
+}
+
+#submit:active {
+    margin-left: 10px;
+    margin-bottom: 15px;
+}
+
+#messages_info {
+    padding: 10px 10px;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+#rank_num {
+    float: left;
+}
+
+#rank_ways {
+    float: right;
+}
+
+#no_comment {
+    text-align: center;
+}
+
+.clear {
+    clear: both;
+}
+
+.message {
+    border-top: 1px dashed rgb(27, 143, 252);
+    min-height: 115px;
+    height: auto;
+}
+
+.left {
+    float: left;
+    width: 90%;
+    min-height: 115px;
+    height: auto;
+    position: relative;
+}
+
+.right {
+    float: right;
+    width: 10%;
+    min-height: 115px;
+    height: auto;
+    text-align: center;
+}
+
+.message_content {
+    padding: 10px;
+    margin-bottom: 30px;
+}
+
+.post_footer {
+    color: grey;
+    padding: 0 10px;
+    height: 30px;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+}
+
+.good_bad {
+    text-align: center;
+    padding: 10px;
+}
+
+.good {
+    display: block;
+    margin: 0 auto;
+    outline: none;
+}
+
+#hot_comments {
+    display: inline;
+    cursor: pointer;
+}
+
+#newest_comments {
+    display: inline;
+    color: gray;
+    cursor: pointer;
+}

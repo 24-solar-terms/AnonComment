@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>{{title}}</title>
+        <link rel="icon" href="../static/img/icon.ico" type="images/x-ico" />
+        <link rel="stylesheet" type="text/css" href="../static/css/style.css">
+        <script src="../static/js/jquery-3.4.1.min.js"></script>
+        <script src="../static/js/set_wh.js"></script>
+        {% block resources %}{% endblock %}
+    </head>
+    <body>
+        <!--整体包含所有内容的容器-->
+        <div id="container">
+            <!--首页顶部导航栏-->
+            <div id="nav">
+                {% block nav_content %}{% endblock %}
+            </div>
+            <!--内容区域-->
+            <div id="content">
+                {% block main_content %}{% endblock %}
+            </div>
+            <!--页脚-->
+            <div id="footer">
+                {% block footer_extra_content %}{% endblock %}
+                <div id="footer_content">
+                    <p style="color: rgb(252, 5, 87)">匿名评论 畅所欲言</p>
+                    <p>Contact us anoncomment@126.com</p>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

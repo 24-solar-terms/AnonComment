@@ -1,0 +1,150 @@
+#content {
+    background-color: #f8f8f8;
+}
+
+#footer {
+    background-color: #f8f8f8;
+}
+
+.left {
+    float: left;
+    width: 30%;
+    height: 100%;
+    margin-top: 10px;
+    position: relative;
+}
+
+.right {
+    float: right;
+    width: 70%;
+    height: 100%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.clear {
+    clear: both;
+}
+
+#classify {
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    right: 5px;
+    border: 1px solid rgb(27, 143, 252);
+    border-radius: 10px;
+    box-shadow: 4px 4px 5px grey;
+    background-color: white;
+}
+
+#classify table {
+    margin: 0 auto;
+    text-align: center;
+}
+
+#classify th {
+    font-size: 1.5em;
+}
+
+#classify td {
+    padding: 5px 0;
+}
+
+#classify input {
+    border-radius: 50px;
+    outline: none;
+    font-size: 1.2em;
+    padding: 5px 15px;
+}
+
+#show_teachers {
+    text-align: center;
+    margin-right: 20%;
+    margin-left: 5px;
+    border-top: 1px solid rgb(27, 143, 252);
+    border-left: 1px solid rgb(27, 143, 252);
+    border-right: 1px solid rgb(27, 143, 252);
+    border-radius: 10px;
+    box-shadow: 4px 4px 5px grey;
+    background-color: white;
+}
+
+#table_head {
+    font-size: 1.5em;
+    font-weight: bold;
+    padding: 5px 0;
+}
+
+#teachers_table {
+    margin: 15px;
+    border: 1px solid;
+    border-collapse: collapse;
+    font-size: 1.25em;
+}
+
+#teachers_table td{
+    border: 1px solid;
+    border-collapse: collapse;
+}
+
+.department {
+    white-space: nowrap;
+    padding: 25px 15px;
+    text-align: center;
+}
+
+.teachers {
+    padding: 5px;
+    text-align: left;
+}
+
+.teachers a {
+    text-decoration: none;
+    padding: 0 10px;
+    white-space: nowrap;
+}
+
+.teachers a:link {color: rgb(99, 98, 98);}
+.teachers a:visited {color: rgb(99, 98, 98);}
+.teachers a:hover {color: rgb(99, 98, 98);}
+.teachers a:active {color: rgb(99, 98, 98);}
+
+#ranking_list {
+    margin: 10px auto;
+    /*border: 1px solid;*/
+    width: 80%;
+    border-collapse: collapse;
+}
+
+#ranking_list th {
+    color: #666666;
+    padding: 6px 0;
+}
+
+#ranking_list tr {
+    border-collapse: collapse;
+    height: 32px;
+}
+
+#ranking_list td {
+    border-collapse: collapse;
+}
+
+#ranking_list tr:nth-child(even) {
+    background-color: rgb(142, 200, 255);
+}
+
+#ranking_list a {
+    color: black;
+    text-decoration: none;
+}
+
+#ranking_list a:hover {
+    color: #136CB2;
+    text-decoration: underline;
+}
+
+.rank {
+    width: 60px;
+    text-align: right;
+}

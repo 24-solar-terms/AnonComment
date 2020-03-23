@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block resources %}
+{{super()}}
+<link rel="stylesheet" type="text/css" href="../static/css/page_header.css">
+<link rel="stylesheet" type="text/css" href="../static/css/login.css">
+{% endblock %}
+
+{% block nav_content %}
+<div id="header">
+    <a href="/" style="text-decoration: none;"><h1>匿名<img src="../static/img/icon.png" alt="">评教</h1></a>
+    <span>登录</span>
+</div>
+{% endblock %}
+
+{% block main_content %}
+<div id="login_area">
+    <form action="" id="login_form">
+        <p>手机登录</p>
+        <input type="text" id="phone" placeholder="手机号码，仅支持大陆手机">
+        <br />
+        <input type="button" id="get_code" value="获取短信验证码">
+        <input type="text" id="code">
+        <br />
+        <input type="checkbox" id="remember_me">
+        <span>记住我</span>
+        <br />
+        <input type="submit" id="validate" value="登录">
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base2.html' %}
+{% from 'show_by_departments.html' import show_by_departments with context %}
+
+{% block resources %}
+{{super()}}
+<link rel="stylesheet" type="text/css" href="../static/css/teachers_style.css">
+<script src="../static/js/by_rank_or_departments.js"></script>
+{% endblock %}
+
+{% block nav_content %}
+{{super()}}
+{% endblock %}
+
+{% block main_content %}
+<div class="left">
+    <div id="classify">
+        <table>
+            <th>分类方式</th>
+            <tr><td><input type="button" name="by_depart" id="by_depart" flag="1" value="按部门查询"></td></tr>
+            <tr><td><input type="button" name="by_rank" id="by_rank" flag="0" value="按排行榜查询"></td></tr>
+        </table>
+    </div>
+</div>
+<div class="right">
+    <div id="show_teachers">
+        {{show_by_departments(table)}}
+    </div>
+</div>
+<div class="clear"></div>
+{% endblock %}

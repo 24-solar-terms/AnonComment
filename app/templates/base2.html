@@ -1,0 +1,28 @@
+{% extends 'base1.html' %}
+
+{% block resources %}
+{{super()}}
+<link rel="stylesheet" type="text/css" href="../static/css/page_header.css">
+{% endblock %}
+
+{% block nav_content %}
+{{super()}}
+<div id="header">
+    <a href="/" style="text-decoration: none;"><h1>匿名<img src="../static/img/icon.png" alt="">评教</h1></a>
+</div>
+<!--搜索框-->
+<div class="search">
+    <form action="">
+        <table>
+            <tr>
+                <td>
+                    <input type="text" name="search_bar" id="search_bar">
+                </td>
+                <td>
+                    <input type="button" name="search_button" id="search_button" value="查一下">
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+{% endblock %}

@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# my file
+__pycache__/
+flask/
+.idea/
+本科毕设日记.md
+项目规划.docx
