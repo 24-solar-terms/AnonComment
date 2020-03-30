@@ -1,8 +1,9 @@
 from app import app
-from flask import render_template, redirect, request
+from flask import render_template, redirect, request, session, url_for, jsonify
 from form import CommentForm
 from ranking import ranking
 import acdb
+import os
 
 
 # table字典的key值表示部门，value值是一个列表，每个元素是一位老师的信息
@@ -22,15 +23,6 @@ def index():
     """
     return render_template('index.html',
                            title='匿名评教')
-
-
-@app.route('/login')
-def login():
-    """
-    登录界面
-    :return: 渲染模板
-    """
-    return render_template('login.html')
 
 
 @app.route('/teachers')
@@ -135,3 +127,6 @@ def rank_or_departments():
         # 获取最新排行榜
         rank = ranking()
         return render_template('show_by_rank.html', rank=rank[:30])
+
+
+# ------------------------以下作为尝试第三方登陆的测试-------------------------------

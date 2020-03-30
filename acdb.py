@@ -2,6 +2,7 @@ import mysql.connector
 import pandas as pd
 import numpy as np
 import re
+from textfilter import DFAFilter
 
 
 def init():
@@ -132,6 +133,10 @@ def update_comment(t_id: int, score: int, whether: int, comment: str, submit_dat
     cursor.execute(update_sql)
     if comment != "":
         # 如果评论内容不为空插入一条评论
+        # 创建一个DFA敏感词过滤器
+        dfa_filter = DFAFilter()
+        dfa_filter.parse('keywords')
+        comment = dfa_filter.filter(comment)
         insert_sql = "INSERT INTO comments (t_id, content, post_time) VALUES (%s, %s, %s);"
         val = (t_id, comment, submit_date)
         cursor.execute(insert_sql, val)
