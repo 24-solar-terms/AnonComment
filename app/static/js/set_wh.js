@@ -4,7 +4,7 @@ $(function(){
     var screen_width = window.screen.width;
     body.css('height', screen_height);
     if(document.body.scrollHeight > (window.innerHeight || document.documentElement.clientHeight)) {
-        body.css('width', screen_width-17);
+        body.css('width', screen_width - (window.innerWidth - document.body.clientWidth));
     }
     else {
         body.css('width', screen_width);
