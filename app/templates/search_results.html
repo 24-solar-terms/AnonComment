@@ -1,0 +1,40 @@
+{% extends 'base2.html' %}
+
+{% block resources %}
+{{super()}}
+<link rel="stylesheet" type="text/css" href="../static/css/search_results_style.css">
+{% endblock %}
+
+{% block nav_content %}
+{{super()}}
+{% endblock %}
+
+{% block main_content %}
+<div id="search_results">
+    <div id="results_head">
+        {% if suggestions %}
+        <p style="color: gray;">已找到相关结果{{results_num}}个</p>
+            {% if flag %}
+            <p style="margin-top: 10px;">
+                <img src="../static/img/warning.png"> 未找到<span style="font-weight: bolder; color: blue;">{{keyword}}</span>的相关信息，您是不是想查找以下信息
+            </p>
+            {% endif %}
+        {% else %}
+        <p>啊哦，没有找到相关结果~</p>
+        {% endif %}
+    </div>
+    {% if suggestions %}
+    <div id="item_list">
+        {% for item in suggestions %}
+        <div class="item">
+            <p style="float: right; font-size: x-large;"><a href="{{item[0]}}{{item[2]}}">{{item[3]}}</a></p>
+            <h3 style="font-weight: 500;"><a href="{{item[0]}}{{item[2]}}">{{item[1]}}</a></h3>
+            <p style="margin: 5px 0;"><a href="{{item[0]}}{{item[2]}}">{{item[4]}} {{item[5]}} {{item[6]}}</a></p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <img src="../static/img/nodata.png" alt="啊哦，没有找到相关结果">
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% macro show_tip_list(suggestions) %}
+    {% if suggestions %}
+        {% for item in suggestions %}
+        <a class="tip_item" href="/{{item[0]}}{{item[2]}}">
+            {{item[1]}}
+            <p style="display: inline; float: right"><img src="../static/img/star.png">{{item[3]}}</p>
+        </a>
+        {% endfor %}
+    {% endif %}
+{% endmacro %}
+
+{{show_tip_list(suggestions)}}

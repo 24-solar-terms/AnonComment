@@ -4,6 +4,7 @@
 {{super()}}
 <link rel="stylesheet" type="text/css" href="../static/css/index_style.css">
 <script src="../static/js/count_tot_comments.js"></script>
+<script src="../static/js/search.js"></script>
 {% endblock %}
 
 {% block main_content %}
@@ -13,14 +14,16 @@
 </div>
 <!--搜索框-->
 <div class="search">
-    <form action="">
+    <form action="/search" method="post">
+        {{search_form.hidden_tag()}}
         <table>
             <tr>
                 <td>
-                    <input type="text" name="search_bar" id="search_bar">
+                    {{search_form.search_bar}}
+                    <div class="search_tip_box"></div>
                 </td>
                 <td>
-                    <input type="button" name="search_button" id="search_button" value="查一下">
+                    {{search_form.search_button}}
                 </td>
             </tr>
         </table>

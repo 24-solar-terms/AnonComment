@@ -69,6 +69,25 @@ def select_all_teachers():
     return table
 
 
+def select_all_teachers_for_search():
+    """
+    查询所有老师信息，为模糊搜索提供数据
+    :return: 字典类型，key：中文姓名+拼音，如'张三zhangsan'
+                      value: 列表信息，[t_id, name, pinyin, score, department, degree, title]
+    """
+    info = {}
+    select_sql = "SELECT t_id, name, pinyin, score, department, degree, title  FROM teachers;"
+    cursor.execute(select_sql)
+    teachers = cursor.fetchall()
+    for teacher in teachers:
+        key = teacher[1] + teacher[2] + str(teacher[0])
+        teacher = list(teacher)
+        # 分数保留两位小数
+        teacher[3] = round(teacher[3], 2)
+        info[key] = teacher
+    return info
+
+
 def select_teacher_info(teacher: str):
     """
     查询某位老师的信息和评论

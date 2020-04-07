@@ -37,6 +37,30 @@
     height: 40px;
     font-size: 1.1em;
     width: 500px;
+    padding: 5px 10px;
+}
+
+.search_tip_box {
+    width: 500px;
+    margin: 0 auto;
+    position: absolute;
+    border-left: 1px solid grey;
+    border-right: 1px solid grey;
+    border-bottom: 1px solid grey;
+    border-top: none;
+    display: none;
+}
+
+.tip_item {
+    display: block;
+    text-align: left;
+    padding: 3px 10px;
+    text-decoration: none;
+    color: black;
+}
+
+.tip_item:hover {
+    background-color: gainsboro;
 }
 
 #search_button {

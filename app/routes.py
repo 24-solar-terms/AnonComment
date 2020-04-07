@@ -1,9 +1,9 @@
 from app import app
-from flask import render_template, redirect, request, session, url_for, jsonify
-from form import CommentForm
+from flask import render_template, redirect, request, session
+from form import CommentForm, SearchForm
 from ranking import ranking
+from fuzzy_search import get_suggestions
 import acdb
-import os
 
 
 # table字典的key值表示部门，value值是一个列表，每个元素是一位老师的信息
@@ -12,6 +12,8 @@ table = {}
 comments = []
 # 只有一个元素，为某位老师的所有评论数
 count = ()
+# 模糊搜索时需要的老师数据信息
+fuzzy_info = {}
 
 
 @app.route('/')
@@ -21,8 +23,11 @@ def index():
     匿名评教首页
     :return: 渲染模板
     """
+    # 实例化一个搜索表单
+    search_form = SearchForm()
     return render_template('index.html',
-                           title='匿名评教')
+                           title='匿名评教',
+                           search_form=search_form)
 
 
 @app.route('/teachers')
@@ -38,9 +43,12 @@ def show_all_teachers():
     # 如果为空就调用数据库接口获取
     if not table:
         table = acdb.select_all_teachers()
+    # 实例化一个搜索表单
+    search_form = SearchForm()
     return render_template('teachers.html',
                            title='所有老师',
-                           table=table)
+                           table=table,
+                           search_form=search_form)
 
 
 @app.route('/<teacher>', methods=['GET', 'POST'])
@@ -58,7 +66,8 @@ def show_teacher(teacher: str):
     comments, count = acdb.select_comments(info[0])
     # 实例化一个评论提交表单
     form = CommentForm()
-
+    # 实例化一个搜索表单
+    search_form = SearchForm()
     # 评论表单提交验证
     if form.validate_on_submit():
         # 验证成功，获取表单数据
@@ -75,7 +84,8 @@ def show_teacher(teacher: str):
                            info=info,
                            form=form,
                            count=count[0],
-                           comments=comments)
+                           comments=comments,
+                           search_form=search_form)
 
 
 @app.route('/rank', methods=['GET', 'POST'])
@@ -127,6 +137,46 @@ def rank_or_departments():
         # 获取最新排行榜
         rank = ranking()
         return render_template('show_by_rank.html', rank=rank[:30])
+
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    """
+    模糊搜索后端处理
+    :return: 渲染模板
+    """
+    global fuzzy_info
+    # 获取老师的数据，通过ajax请求的关键词从中进行匹配
+    if not fuzzy_info:
+        fuzzy_info = acdb.select_all_teachers_for_search()
+    # 获取ajax请求数据
+    tip = request.form.get('tip')
+    # 实例化搜索表单
+    search_form = SearchForm()
+    suggestions = []
+    flag = 0
+    if tip:
+        # tip为1说明是为提示框提供数据发起的请求
+        keyword = request.form.get('keyword')
+        if keyword != '':
+            # 当传入的keyword不为空才进行匹配
+            suggestions, _ = get_suggestions(keyword, fuzzy_info)
+            return render_template('tip_list.html', suggestions=suggestions[:8])
+    else:
+        # 点击搜索框按钮
+        if search_form.validate_on_submit():
+            keyword = search_form.search_bar.data
+            session['keyword'] = keyword + ' '
+            suggestions, flag = get_suggestions(keyword, fuzzy_info)
+            redirect('/search')
+
+        return render_template('search_results.html',
+                               title=session.get('keyword') + '搜索结果',
+                               keyword=session.get('keyword'),
+                               results_num=len(suggestions),
+                               search_form=search_form,
+                               suggestions=suggestions,
+                               flag=flag)
 
 
 # ------------------------以下作为尝试第三方登陆的测试-------------------------------

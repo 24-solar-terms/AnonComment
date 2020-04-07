@@ -1,0 +1,26 @@
+#content {
+    background-color: #f8f8f8;
+    padding: 20px 0;
+}
+
+#footer {
+    background-color: #f8f8f8;
+}
+
+#search_results {
+    padding-left: 118px;
+    background-color: white;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+#results_head {
+    padding: 10px 0;
+}
+
+.item {
+    padding: 5px 0;
+    font-weight: 500;
+    width: 50%;
+    border-bottom: 1px dashed rgb(0, 132, 255);
+}

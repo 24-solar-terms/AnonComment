@@ -1,6 +1,17 @@
 from flask_wtf import FlaskForm
-from wtforms import SelectField, RadioField, TextAreaField, DateField, SubmitField
+from wtforms import SelectField, RadioField, TextAreaField, DateField, SubmitField, StringField
 from wtforms.validators import InputRequired, NumberRange
+
+
+class SearchForm(FlaskForm):
+    """
+    文字域： 搜索内容框
+    提交按钮： 提交
+    """
+    search_bar = StringField(validators=[InputRequired()],
+                             render_kw={'id': 'search_bar'})
+    search_button = SubmitField(render_kw={'id': 'search_button',
+                                           'value': '查一下'})
 
 
 class CommentForm(FlaskForm):
