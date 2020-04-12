@@ -39,8 +39,25 @@ def init():
                                 "support INT NOT NULL DEFAULT 0," \
                                 "post_time DATE NOT NULL);"
 
+    create_user_comments_table_sql = "CREATE TABLE user_comments (" \
+                                     "id INT NOT NULL AUTO_INCREMENT PRIMARY KEY," \
+                                     "openid VARCHAR(50) NOT NULL," \
+                                     "t_id INT NOT NULL," \
+                                     "score INT NOT NULL," \
+                                     "yes INT NOT NULL," \
+                                     "content VARCHAR(300) NOT NULL," \
+                                     "c_id INT DEFAULT NULL);"
+
+    create_user_supports_table_sql = "CREATE TABLE user_supports (" \
+                                     "id INT NOT NULL AUTO_INCREMENT PRIMARY KEY," \
+                                     "openid VARCHAR(50) NOT NULL," \
+                                     "c_id INT NOT NULL," \
+                                     "t_id INT NOT NULL);"
+
     cursor.execute(create_teachers_table_sql)
     cursor.execute(create_comments_table_sql)
+    cursor.execute(create_user_comments_table_sql)
+    cursor.execute(create_user_supports_table_sql)
 
     # 获取老师信息并插入表
     with open('./app/static/data/data.csv', 'rb') as f:
@@ -125,6 +142,17 @@ def select_comments(t_id: int):
     return comments, count
 
 
+def select_for_ranking():
+    """
+    获取所有老师的列表，为教师排行榜提供数据
+    :return: 老师列表
+    """
+    select_sql = "SELECT t_id, name, pinyin, tot_score, num, score FROM teachers"
+    cursor.execute(select_sql)
+    teachers = cursor.fetchall()
+    return teachers
+
+
 def get_all_comments_num():
     """
     查询全站所有评论数
@@ -136,16 +164,34 @@ def get_all_comments_num():
     return str(count[0])
 
 
-def update_comment(t_id: int, score: int, whether: int, comment: str, submit_date: str):
+def is_commented(openid: str, t_id: int):
     """
-    更新老师信息，插入一条新的评论
+    根据openid和t_id查询用户评论表中是否有记录，没有则说明该用户未对该老师评论，
+    否则评论过了，返回评论
+    :param openid: 用户标识
+    :param t_id: 老师id
+    :return: 如果存在评论则返回评论列表，否则返回None
+    """
+    select_sql = "SELECT * FROM user_comments WHERE openid='{}' AND t_id={};".format(openid, t_id)
+    cursor.execute(select_sql)
+    res = cursor.fetchone()
+    if res:
+        return list(res)
+    else:
+        return None
+
+
+def insert_comment(t_id: int, score: int, whether: int, comment: str, submit_date: str):
+    """
+    更新老师信息，插入一条新的评论到评论表
     :param t_id: 教师id
     :param score: 评论的分数
     :param whether: 是否点名
     :param comment: 评论内容
     :param submit_date: 提交时间
-    :return: None
+    :return: c_id
     """
+    c_id = None
     # 更新老师信息
     update_sql = "UPDATE teachers SET tot_score=tot_score+{}, num=num+1, yes=yes+{}," \
                  "score=tot_score/num, percent=yes/num WHERE t_id={};".format(score, whether, t_id)
@@ -159,18 +205,130 @@ def update_comment(t_id: int, score: int, whether: int, comment: str, submit_dat
         insert_sql = "INSERT INTO comments (t_id, content, post_time) VALUES (%s, %s, %s);"
         val = (t_id, comment, submit_date)
         cursor.execute(insert_sql, val)
+        # 获取c_id
+        cursor.execute("SELECT LAST_INSERT_ID();")
+        c_id = cursor.fetchone()[0]
+    db.commit()
+    return c_id
+
+
+def insert_user_comment(openid: str, t_id: int, score: int, whether: int,
+                        comment: str, c_id: int):
+    """
+    插入新纪录到用户评论表，即标记用户评论了该老师
+    :param openid: 用户唯一标识
+    :param t_id: 评论教师的id
+    :param score: 评分
+    :param whether: 是否点名
+    :param comment: 评论内容
+    :param c_id: 评论id
+    :return: None
+    """
+    insert_sql = "INSERT INTO user_comments (openid, t_id, score, yes, content, c_id) VALUES (%s, %s, %s, %s, %s, %s)"
+    val = (openid, t_id, score, whether, comment, c_id)
+    cursor.execute(insert_sql, val)
     db.commit()
 
 
-def select_for_ranking():
+def update_user_comment(teacher: str, openid: str, score: int, whether: int,
+                        comment: str, submit_date: str):
     """
-    获取所有老师的列表，为教师排行榜提供数据
-    :return: 老师列表
+    用户更新自己对某位老师的评论
+    :param teacher: 字符串类型，为评论老师的URL路径，如/1zhangsan
+    :param openid: 字符串类型，当前用户的唯一标识
+    :param score: int，更新后的评分
+    :param whether: int，更新后的点名情况
+    :param comment: str，更新后的评论
+    :param submit_date: str，更新后的提交日期
+    :return: None
     """
-    select_sql = "SELECT t_id, name, pinyin, tot_score, num, score FROM teachers"
-    cursor.execute(select_sql)
-    teachers = cursor.fetchall()
-    return teachers
+    t_id = int(re.match(r'/([0-9]+)([a-z]+)', teacher).group(1))
+    old_comment = is_commented(openid, t_id)
+    old_score = old_comment[3]
+    old_whether = old_comment[4]
+    c_id = old_comment[6]
+    # 更新教师信息
+    sql = "UPDATE teachers SET tot_score=tot_score-{}+{}, yes=yes-{}+{}," \
+          "score=tot_score/num, percent=yes/num WHERE t_id={};".format(old_score, score,
+                                                                       old_whether, whether,
+                                                                       t_id)
+    cursor.execute(sql)
+    # 更新用户评论表
+    sql = "UPDATE user_comments SET score={}, yes={}, content='{}'" \
+          "WHERE openid='{}' AND t_id={};".format(score, whether, comment, openid, t_id)
+    cursor.execute(sql)
+    # 更新评论表
+    # 原来没评论，现在有评论
+    if not c_id and comment != "":
+        sql = "INSERT INTO comments (t_id, content, post_time) VALUES (%s, %s, %s);"
+        val = (t_id, comment, submit_date)
+        cursor.execute(sql, val)
+        # 获取c_id
+        cursor.execute("SELECT LAST_INSERT_ID();")
+        c_id = cursor.fetchone()[0]
+        # 更新用户评论表的c_id
+        sql = "UPDATE user_comments SET c_id={} WHERE openid='{}' AND t_id={};".format(c_id,
+                                                                                       openid,
+                                                                                       t_id)
+        cursor.execute(sql)
+    elif c_id and comment != "":
+        sql = "UPDATE comments SET content='{}' WHERE c_id={};".format(comment, c_id)
+        cursor.execute(sql)
+    elif c_id and comment == "":
+        sql = "DELETE FROM comments WHERE c_id={}".format(c_id)
+        cursor.execute(sql)
+        sql = "UPDATE user_comments SET c_id=NULL WHERE openid='{}' AND t_id={};".format(openid,
+                                                                                         t_id)
+        cursor.execute(sql)
+
+    db.commit()
+
+
+def update_user_support(openid: str, insert_val: list, del_cid: tuple):
+    """
+    更新用户点赞表，删除或添加记录，更新评论表中的support字段
+    :param openid: 字符串类型，用户唯一标识
+    :param insert_val: 列表，每个元素是一个元组，包括需要openid，添加的点赞评论id
+    :param del_cid: 元组，需要删除的点赞评论id
+    :return: None
+    """
+    insert_cid = tuple(map(lambda x: x[1], insert_val))
+    print(insert_cid)
+    print(del_cid)
+    if insert_val:
+        print("executed insert!")
+        # 更新用户点赞表
+        sql = "INSERT INTO user_supports (openid, c_id, t_id) VALUES (%s, %s, %s)"
+        cursor.executemany(sql, insert_val)
+        # 更新评论表中support字段
+        sql = "UPDATE comments SET support=support+1 WHERE c_id IN {}".format(insert_cid)
+        cursor.execute(sql)
+    if del_cid:
+        print("executed delete!")
+        # 更新用户点赞表
+        sql = "DELETE FROM user_supports WHERE openid='{}' AND c_id IN {}".format(openid,
+                                                                                  del_cid)
+        cursor.execute(sql)
+        # 更新评论表中support字段
+        sql = "UPDATE comments SET support=support-1 WHERE c_id IN {}".format(del_cid)
+        cursor.execute(sql)
+
+    db.commit()
+
+
+def get_like_list(openid: str, t_id: int):
+    """
+    根据openid和t_id查询用户对该老师的点赞评论，返回c_id列表
+    :param openid: 字符串类型，用户的唯一标识
+    :param t_id: int，老师id
+    :return: 列表类型，每个元素是一个c_id
+    """
+    sql = "SELECT c_id FROM user_supports WHERE openid='{}' AND t_id={}".format(openid,
+                                                                                t_id)
+    cursor.execute(sql)
+    like_list = cursor.fetchall()
+    like_list = list(map(lambda x: x[0], like_list))
+    return like_list
 
 
 config = {

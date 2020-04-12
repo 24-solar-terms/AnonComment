@@ -9,7 +9,8 @@ class SearchForm(FlaskForm):
     提交按钮： 提交
     """
     search_bar = StringField(validators=[InputRequired()],
-                             render_kw={'id': 'search_bar'})
+                             render_kw={'id': 'search_bar',
+                                        'autocomplete': 'off'})
     search_button = SubmitField(render_kw={'id': 'search_button',
                                            'value': '查一下'})
 
@@ -33,6 +34,8 @@ class CommentForm(FlaskForm):
                                    render_kw={'id': 'call_roll'},
                                    choices=[(1, '会'), (0, '不会')],
                                    coerce=int)
-    comment = TextAreaField(render_kw={'id': 'comment_bar', 'cols': 30, 'rows': 10, 'placeholder': '关于这位老师，你想说点什么'})
+    comment = TextAreaField(render_kw={'id': 'comment_bar',
+                                       'cols': 30, 'rows': 10,
+                                       'placeholder': '关于这位老师，你想说点什么'})
     submit_date = DateField(render_kw={'id': 'submit_date'})
     submit = SubmitField(render_kw={'id': 'hidden_submit'})

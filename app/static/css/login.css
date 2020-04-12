@@ -46,41 +46,5 @@
 #login_form p {
     margin: 10px 5px;
     font-size: 1.125em;
-    font-weight: 400;
-}
-
-#phone {
-    height: 35px;
-    width: 265px;
-    margin: 10px 5px;
-}
-
-#get_code {
-    width: 125px;
-    height: 35px;
-    margin: 10px 5px;
-}
-
-#code {
-    height: 35px;
-    width: 125px;
-    margin: 10px 5px;
-}
-
-#remember_me {
-    margin: 10px 0 10px 5px;
-}
-
-#remember_me + span {
-    font-size: 13px;
-}
-
-#validate {
-    margin: 10px 5px;
-    width: 265px;
-    height: 35px;
-    color: white;
-    background-color: rgb(27, 143, 252);
-    border: 0;
-    cursor: pointer;
+    font-weight: 500;
 }

@@ -44,6 +44,22 @@
     font-size: 1.1em;
 }
 
+#require_login {
+    padding: 5px 12px;
+    margin-top: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 4px;
+    text-shadow: 0 1px 0 #ffffff;
+    font-size: 1rem;
+    text-align: center;
+}
+
+#require_login:hover {
+    cursor: pointer;
+    background-color: #fafafa;
+    border-color: rgba(0, 0, 0, 0.16);
+}
+
 #comment_bar {
     font-size: 1.2em;   
     resize: none;
@@ -64,6 +80,16 @@
 
 #submit_date {
     display: none;
+}
+
+#edit_button {
+    margin-left: 5px;
+}
+
+#edit_button:hover {
+    cursor: pointer;
+    width: 70px;
+    height: auto;
 }
 
 #submit {

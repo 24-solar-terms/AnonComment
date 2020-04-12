@@ -2,7 +2,16 @@
 
 {% block nav_content %}
 <div id="nav_content">
+    {% if user_name %}
+    <div id="user">
+        <a id="user_name">{{user_name}}</a>
+        <div id="dropdown">
+            <a id="quit" href="/logout">退出</a>
+        </div>
+    </div>
+    {% else %}
     <p><a id="login" href="/login">登录</a></p>
+    {% endif %}
     <p>青岛大学</p>
     <p>数据科学与软件工程学院</p>
     <a href="/teachers"><input type="button" name="view_all" id="view_all" value="查看所有" ></a>

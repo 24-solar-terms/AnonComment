@@ -1,5 +1,6 @@
 {% extends 'base2.html' %}
 {% from 'show_comments.html' import show_comments with context %}
+{% from 'comment_form.html' import show_comment_form with context %}
 
 {% block resources %}
 {{super()}}
@@ -61,29 +62,33 @@
     <div id="comment_area">
         <div id="comment">
             <form action="" id="comment_form" method="POST">
-                {{form.hidden_tag()}}
-                <p style="display: inline; font-size: 1.1em;">{{form.score.label}}：</p>
-                {{form.score}}
-                <p style="display: inline; font-size: 1.1em;">{{form.whether_call_roll.label}}：</p>
-                <p style="display: inline; font-size: 1.1em;">
-                    {% for radio in form.whether_call_roll %}
-                    {{radio}}{{radio.label}}
-                    {% endfor %}
-                </p>
-                <p id="error" style="color: red; display: inline; font-size: 1.1em">
-                    {% for message in form.score.errors %}
-                    {{message}}
-                    {% endfor %}
-                    {% for message in form.whether_call_roll.errors %}
-                    {{message}}
-                    {% endfor %}
-                </p>
-                <br />
-                <!--评论框-->
-                {{form.comment}}
-                <input type="image" src="../static/img/submit.png" id="submit">
-                <p id="text-count-tip">还能输入<span id="text-count">300</span>个字符</p>
-                {{form.submit_date}}
+                {% if user_name %}
+                    {% if user_comment %}
+                    <div class="comment_form" style="display: inline">
+                        <p style="display: inline; font-size: 1.1em;">您的评分：</p>
+                        <p id="user_score" style="display: inline; font-size: 1.1em; margin-right: 10px;">{{user_comment[3]}}</p>
+                        <p style="display: inline; font-size: 1.1em;">
+                            是否点名：
+                        </p>
+                        {% if user_comment[4] %}
+                        <p id="user_call_roll" style="display: inline; font-size: 1.1em;">会</p>
+                        {% else %}
+                        <p id="user_call_roll" style="display: inline; font-size: 1.1em;">不会</p>
+                        {% endif %}
+                        <textarea id="comment_bar" readonly>{{user_comment[5]}}</textarea>
+                        <div style="display: inline-block">
+                            <img src="../static/img/edit.png" id="edit_button">
+                            <p style="color: gray">点击修改</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="comment_form" style="display: inline">
+                        {{show_comment_form(form)}}
+                    </div>
+                    {% endif %}
+                {% else %}
+                <input type="button" id="require_login" value="请登录后评教" onclick="javascript:window.location.href='/login'">
+                {% endif %}
             </form>
         </div>
         <div id="messages_info">

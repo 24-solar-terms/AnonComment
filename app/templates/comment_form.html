@@ -1,0 +1,27 @@
+{% macro show_comment_form(form) %}
+{{form.hidden_tag()}}
+<p style="display: inline; font-size: 1.1em;">{{form.score.label}}：</p>
+{{form.score}}
+<p style="display: inline; font-size: 1.1em;">{{form.whether_call_roll.label}}：</p>
+<p style="display: inline; font-size: 1.1em;">
+    {% for radio in form.whether_call_roll %}
+    {{radio}}{{radio.label}}
+    {% endfor %}
+</p>
+<p id="error" style="color: red; display: inline; font-size: 1.1em">
+    {% for message in form.score.errors %}
+    {{message}}
+    {% endfor %}
+    {% for message in form.whether_call_roll.errors %}
+    {{message}}
+    {% endfor %}
+</p>
+<br />
+<!--评论框-->
+{{form.comment}}
+<input type="image" src="../static/img/submit.png" id="submit">
+<p id="text-count-tip">还能输入<span id="text-count">300</span>个字符</p>
+{{form.submit_date}}
+{% endmacro %}
+
+{{show_comment_form(form)}}

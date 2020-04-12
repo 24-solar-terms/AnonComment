@@ -24,4 +24,27 @@ $(function() {
         return true;
     }
     $("#submit").click(check);
+
+    $("#edit_button").click(function () {
+        var score = $("#user_score").text();
+        var call_roll = $("#user_call_roll").text();
+        var comment = $("#comment_bar").val();
+        $.ajax({
+                url: '/update_user_comment',
+                type: 'GET',
+                success: function(data) {
+                    $(".comment_form").html(data);
+                    $("#comment_form").attr("action", "/update_user_comment");
+                    $("#score").val(parseInt(score));
+                    if(call_roll === "会") {
+                        $('input:radio').eq(0).attr('checked', 'true');
+                    }
+                    else {
+                        $('input:radio').eq(1).attr('checked', 'true');
+                    }
+                    $("#comment_bar").val(comment);
+                    $("#submit").click(check);
+                }
+        });
+    });
 });

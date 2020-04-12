@@ -15,7 +15,11 @@
             </div>
             <div class="right">
                 <div class="good_bad">
-                    <input type="image" name="good" class="good" flag="0" src="../static/img/good.png">
+                    {% if comment[0] in like_comments %}
+                    <input type="image" name="good" id="{{comment[0]}}" class="good" flag="1" src="../static/img/good.png">
+                    {% else %}
+                    <input type="image" name="good" id="{{comment[0]}}" class="good" flag="0" src="../static/img/good.png">
+                    {% endif %}
                     <p style="margin: 5px 0;">{{comment[3]}}</p>
                 </div>
             </div>
