@@ -271,11 +271,15 @@ def update_user_comment(teacher: str, openid: str, score: int, whether: int,
                                                                                        openid,
                                                                                        t_id)
         cursor.execute(sql)
+    # 原来有评论，现在也有评论
     elif c_id and comment != "":
         sql = "UPDATE comments SET content='{}' WHERE c_id={};".format(comment, c_id)
         cursor.execute(sql)
+    # 原来有评论，现在无评论
     elif c_id and comment == "":
         sql = "DELETE FROM comments WHERE c_id={}".format(c_id)
+        cursor.execute(sql)
+        sql = "DELETE FROM user_supports WHERE c_id={}".format(c_id)
         cursor.execute(sql)
         sql = "UPDATE user_comments SET c_id=NULL WHERE openid='{}' AND t_id={};".format(openid,
                                                                                          t_id)
@@ -284,35 +288,30 @@ def update_user_comment(teacher: str, openid: str, score: int, whether: int,
     db.commit()
 
 
-def update_user_support(openid: str, insert_val: list, del_cid: tuple):
+def update_user_support(openid: str, t_id: int, c_id: int, click: int):
     """
-    更新用户点赞表，删除或添加记录，更新评论表中的support字段
-    :param openid: 字符串类型，用户唯一标识
-    :param insert_val: 列表，每个元素是一个元组，包括需要openid，添加的点赞评论id
-    :param del_cid: 元组，需要删除的点赞评论id
+    单条修改点赞记录
+    :param openid: 用户唯一标识字符串
+    :param t_id: 用户点赞评论对应的老师id
+    :param c_id: 点赞的评论id
+    :param click: 点赞1或取消点赞0
     :return: None
     """
-    insert_cid = tuple(map(lambda x: x[1], insert_val))
-    print(insert_cid)
-    print(del_cid)
-    if insert_val:
-        print("executed insert!")
+    if click:
         # 更新用户点赞表
         sql = "INSERT INTO user_supports (openid, c_id, t_id) VALUES (%s, %s, %s)"
-        cursor.executemany(sql, insert_val)
+        val = (openid, c_id, t_id)
+        cursor.execute(sql, val)
         # 更新评论表中support字段
-        sql = "UPDATE comments SET support=support+1 WHERE c_id IN {}".format(insert_cid)
+        sql = "UPDATE comments SET support=support+1 WHERE c_id={}".format(c_id)
         cursor.execute(sql)
-    if del_cid:
-        print("executed delete!")
+    else:
         # 更新用户点赞表
-        sql = "DELETE FROM user_supports WHERE openid='{}' AND c_id IN {}".format(openid,
-                                                                                  del_cid)
+        sql = "DELETE FROM user_supports WHERE openid='{}' AND c_id={}".format(openid, c_id)
         cursor.execute(sql)
         # 更新评论表中support字段
-        sql = "UPDATE comments SET support=support-1 WHERE c_id IN {}".format(del_cid)
+        sql = "UPDATE comments SET support=support-1 WHERE c_id={}".format(c_id)
         cursor.execute(sql)
-
     db.commit()
 
 

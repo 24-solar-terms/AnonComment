@@ -3,7 +3,6 @@
 {% block resources %}
 {{super()}}
 <link rel="stylesheet" type="text/css" href="../static/css/index_style.css">
-<script src="../static/js/count_tot_comments.js"></script>
 <script src="../static/js/search.js"></script>
 {% endblock %}
 
@@ -34,6 +33,6 @@
 {% block footer_extra_content %}
 <!--评论条数统计-->
 <div id="num">
-    <p>目前已有<span id="tot_num">0</span>条评论被留下</p>
+    <p>目前已有<span id="tot_num">{{tot_comments_num}}</span>条评论被留下</p>
 </div>
 {% endblock %}

@@ -1,6 +1,4 @@
-$(function() {
-    var like_dict = {};
-    var old_like = {}
+function like_func() {
     /*显示用户是否已经点赞*/
     var good_button = $(".good");
     for(var i = 0; i < good_button.length; i++) {
@@ -20,13 +18,14 @@ $(function() {
             var new_num = parseInt(p.text()) + 1;
             p.text(new_num);
             p.css("color", "rgb(253, 54, 104)");
-            if($(this).attr("id") in like_dict) {
-                like_dict[$(this).attr("id")] += 1;
-            }
-            else {
-                like_dict[$(this).attr("id")] = 1;
-                old_like[$(this).attr("id")] = 0;
-            }
+            $.ajax({
+                url: '/save_user_support',
+                type: 'GET',
+                data: {
+                       'c_id': $(this).attr("id"),
+                       'click': 1
+                      }
+            });
         }
         else {
             $(this).attr("flag", "0");
@@ -35,34 +34,18 @@ $(function() {
             var new_num = parseInt(p.text()) - 1;
             p.text(new_num);
             p.css("color", "black");
-            if($(this).attr("id") in like_dict) {
-                like_dict[$(this).attr("id")] += 1;
-            }
-            else {
-                like_dict[$(this).attr("id")] = 1;
-                old_like[$(this).attr("id")] = 1;
-            }
+            $.ajax({
+                url: '/save_user_support',
+                type: 'GET',
+                data: {
+                       'c_id': $(this).attr("id"),
+                       'click': 0
+                      }
+            });
         }
     });
-    /*窗口销毁后发起ajax请求，提交数据库*/
-    window.onunload = function () {
-        for(var key in like_dict) {
-            if(like_dict[key] % 2 === 0) {
-                delete like_dict[key];
-            }
-            else {
-                if(old_like[key] === 0) {
-                    like_dict[key] = 1;
-                }
-                else {
-                    like_dict[key] = 0;
-                }
-            }
-        }
-        $.ajax({
-            url: '/save_user_support',
-            data: like_dict,
-            type: 'GET'
-        });
-    }
+}
+
+$(function() {
+    like_func();
 });

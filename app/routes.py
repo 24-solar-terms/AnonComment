@@ -15,10 +15,6 @@ import re
 
 # table字典的key值表示部门，value值是一个列表，每个元素是一位老师的信息
 table = {}
-# 每个元素为一条评论的所有信息，包括内容，时间，点赞数等
-comments = []
-# 只有一个元素，为某位老师的所有评论数
-count = ()
 # 模糊搜索时需要的老师数据信息
 fuzzy_info = {}
 
@@ -32,9 +28,11 @@ def index():
     """
     # 实例化一个搜索表单
     search_form = SearchForm()
+    tot_comments_num = acdb.get_all_comments_num()
     return render_template('index.html',
                            title='匿名评教',
                            search_form=search_form,
+                           tot_comments_num=tot_comments_num,
                            user_name=session.get('user_name'))
 
 
@@ -67,8 +65,6 @@ def show_teacher(teacher: str):
     :param teacher: 字符串类型，组成为教师id+姓名拼音（没有+号），用于数据库查找该老师的评论
     :return: 渲染模板
     """
-    # 使用全局变量
-    global comments, count
     # 通过传入的参数查询数据库老师的信息
     info = acdb.select_teacher_info(teacher)
     # 获取该老师的评论和个数
@@ -139,19 +135,10 @@ def save_user_support():
     openid = session.get('openid')
     teacher = str(urlparse(request.referrer).path)
     t_id = int(re.match(r'/([0-9]+)([a-z]+)', teacher).group(1))
-    # 将点赞的c_id存入列表，批量插入
-    insert_val = []
-    # 将取消点赞的c_id存入列表，批量删除
-    del_cid = []
-    for k, v in like_state.items():
-        if int(v):
-            # 值为1插入
-            insert_val.append((openid, int(k), t_id))
-        else:
-            # 值为0删除
-            del_cid.append(int(k))
+    c_id = int(like_state['c_id'])
+    click = int(like_state['click'])
     # 执行数据库操作
-    acdb.update_user_support(openid, insert_val, tuple(del_cid))
+    acdb.update_user_support(openid, t_id, c_id, click)
     return "success"
 
 
@@ -164,17 +151,27 @@ def rank_by():
     """
     # 获取前端请求
     way = int(request.form.get('way'))
+    # 这里必须重新请求，防止数据不一致
+    teacher = str(urlparse(request.referrer).path)
+    t_id = int(re.match(r'/([0-9]+)([a-z]+)', teacher).group(1))
+    # 获取该老师的评论，个数，以及该用户点赞情况
+    comments, count = acdb.select_comments(t_id)
+    like_comments = acdb.get_like_list(session.get('openid'), t_id)
     if not way:
         # 为0按照最热评论显示
         return render_template('show_comments.html',
                                count=count[0],
-                               comments=comments)
+                               comments=comments,
+                               like_comments=like_comments,
+                               user_name=session.get('user_name'))
     else:
         # 为1按照最新评论显示
         # 以c_id排序
         return render_template('show_comments.html',
                                count=count[0],
-                               comments=sorted(comments, key=lambda t: t[0], reverse=True))
+                               comments=sorted(comments, key=lambda t: t[0], reverse=True),
+                               like_comments=like_comments,
+                               user_name=session.get('user_name'))
 
 
 @app.route('/total', methods=['GET'])

@@ -1,4 +1,4 @@
-{% macro show_comments(count, comments) %}
+{% macro show_comments(count, comments, user_name) %}
     <!--评论-->
     {% if count %}
     <!--有评论时-->
@@ -14,6 +14,7 @@
                 </div>
             </div>
             <div class="right">
+                {% if user_name %}
                 <div class="good_bad">
                     {% if comment[0] in like_comments %}
                     <input type="image" name="good" id="{{comment[0]}}" class="good" flag="1" src="../static/img/good.png">
@@ -22,6 +23,7 @@
                     {% endif %}
                     <p style="margin: 5px 0;">{{comment[3]}}</p>
                 </div>
+                {% endif %}
             </div>
             <div class="clear"></div>
         </div>
@@ -35,4 +37,4 @@
     {% endif %}
 {% endmacro %}
 
-{{show_comments(count, comments)}}
+{{show_comments(count, comments, user_name)}}
