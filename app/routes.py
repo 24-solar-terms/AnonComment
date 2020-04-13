@@ -24,10 +24,11 @@ fuzzy_info = {}
 def index():
     """
     匿名评教首页
-    :return: 渲染模板
+    :return: 渲染Jinja模板
     """
     # 实例化一个搜索表单
     search_form = SearchForm()
+    # 查询数据库获得全站的总评论数
     tot_comments_num = acdb.get_all_comments_num()
     return render_template('index.html',
                            title='匿名评教',
@@ -42,11 +43,11 @@ def show_all_teachers():
     显示所有老师界面
     1. 按照学院部门显示
     2. 按照排行榜显示
-    :return: 渲染模板
+    :return: 渲染Jinja模板
     """
     # 使用全局教师table信息
     global table
-    # 如果为空就调用数据库接口获取
+    # 如果为空就调用数据库接口获取全部教师
     if not table:
         table = acdb.select_all_teachers()
     # 实例化一个搜索表单
@@ -61,33 +62,35 @@ def show_all_teachers():
 @app.route('/<teacher>', methods=['GET', 'POST'])
 def show_teacher(teacher: str):
     """
-    显示每一位老师的界面，包括老师信息和相关评价
-    :param teacher: 字符串类型，组成为教师id+姓名拼音（没有+号），用于数据库查找该老师的评论
-    :return: 渲染模板
+    显示每位老师具体信息的界面，包括老师信息和相关评价
+    :param teacher: 字符串类型，组成为教师id+姓名拼音（没有+号，如1zhangsan）
+                    用于数据库查找该老师的所有相关信息
+    :return: 渲染Jinja模板
     """
-    # 通过传入的参数查询数据库老师的信息
+    # 通过传入的参数查询获得数据库中该老师的信息
     info = acdb.select_teacher_info(teacher)
-    # 获取该老师的评论和个数
+    # 获取该老师的所有评论和评论个数
     comments, count = acdb.select_comments(info[0])
-    # 查询该用户是否对该老师有评论
+    # 查询该用户是否对该老师有评价（包括评分，是否点名，评论）
     user_comment = acdb.is_commented(session.get('openid'), info[0])
-    # 查询获取该用户对该老师评论的点赞情况
+    # 查询获取用户对该老师评论的点赞情况
     like_comments = acdb.get_like_list(session.get('openid'), info[0])
-    # 实例化一个评论提交表单, 表示第一次评论该老师
+    # 实例化一个评价提交表单, 第一次评价该老师时使用
     submit_form = CommentForm()
     # 实例化一个搜索表单
     search_form = SearchForm()
     # 评论表单提交验证
     if submit_form.validate_on_submit():
-        # 验证成功，获取表单数据
+        # 验证成功，获取表单数据，分数，是否点名，评论，提交日期
         score = submit_form.score.data
         whether_call_roll = submit_form.whether_call_roll.data
         comment = submit_form.comment.data
         submit_date = submit_form.submit_date.data
-        # 更新老师信息，插入一条评论
+        # 更新老师信息，插入一条评价，同时获得评论id
         c_id = acdb.insert_comment(info[0], score, whether_call_roll, comment, submit_date)
-        # 标记该用户评价了该老师
+        # 标记该用户评价了该老师，记录到数据库
         acdb.insert_user_comment(session.get('openid'), info[0], score, whether_call_roll, comment, c_id)
+        # 重定向回该老师的页面
         return redirect('/'+teacher)
 
     return render_template('teacher.html',
@@ -105,9 +108,11 @@ def show_teacher(teacher: str):
 @app.route('/update_user_comment', methods=['GET', 'POST'])
 def update_user_comment():
     """
-    用户修改对某位老师的评论
-    :return: 如果直接请求，返回提交表单的模板片段，如果使用提交表单提交，则重定向会该老师界面
+    用户修改对某位老师的评价
+    :return: 如果直接请求，返回提交表单的Jinja模板片段
+             如果使用提交表单提交，则重定向会该老师界面
     """
+    # 实例化新的提交表单
     submit_form = CommentForm()
     if submit_form.validate_on_submit():
         # 验证成功，获取表单数据
@@ -115,8 +120,9 @@ def update_user_comment():
         whether_call_roll = submit_form.whether_call_roll.data
         comment = submit_form.comment.data
         submit_date = submit_form.submit_date.data
-        # 更新用户对该教师的评论
+        # 更新用户对该教师的评价，根据url获取老师id+姓名
         teacher = str(urlparse(request.referrer).path)
+        # 更新用户的评价
         acdb.update_user_comment(teacher, session.get('openid'), score, whether_call_roll,
                                  comment, submit_date)
         return redirect_back('/')
@@ -127,11 +133,12 @@ def update_user_comment():
 @app.route('/save_user_support')
 def save_user_support():
     """
-    关闭页面时，传入点赞状态，并存入数据库
-    :return: 成功状态字符串
+    传入点赞状态，并存入数据库
+    :return: 字符串类型，成功状态字符串
     """
     # 通过GET方式从URL中获得传入的点赞状态数据字典，key为c_id，value为点赞1或取消点赞0
     like_state = dict(parse_qsl(unquote(urlparse(request.url).query)))
+    # 获取必要信息
     openid = session.get('openid')
     teacher = str(urlparse(request.referrer).path)
     t_id = int(re.match(r'/([0-9]+)([a-z]+)', teacher).group(1))
@@ -147,14 +154,14 @@ def rank_by():
     """
     该函数处理每位老师评论的显示方式，按照最热评论和最新评论显示
     接收前端ajax请求进行局部更新页面
-    :return: 渲染模板片段
+    :return: 渲染Jinja模板片段
     """
     # 获取前端请求
     way = int(request.form.get('way'))
-    # 这里必须重新请求，防止数据不一致
+    # 这里必须重新请求数据库中的数据，防止数据不一致
     teacher = str(urlparse(request.referrer).path)
     t_id = int(re.match(r'/([0-9]+)([a-z]+)', teacher).group(1))
-    # 获取该老师的评论，个数，以及该用户点赞情况
+    # 获取该老师的评论，个数，以及该用户点赞评论的id列表
     comments, count = acdb.select_comments(t_id)
     like_comments = acdb.get_like_list(session.get('openid'), t_id)
     if not way:
@@ -165,8 +172,7 @@ def rank_by():
                                like_comments=like_comments,
                                user_name=session.get('user_name'))
     else:
-        # 为1按照最新评论显示
-        # 以c_id排序
+        # 为1按照最新评论显示，以c_id排序
         return render_template('show_comments.html',
                                count=count[0],
                                comments=sorted(comments, key=lambda t: t[0], reverse=True),
@@ -174,21 +180,12 @@ def rank_by():
                                user_name=session.get('user_name'))
 
 
-@app.route('/total', methods=['GET'])
-def get_all_comments_num():
-    """
-    首页获取全站评论条数，ajax轮询请求，执行该函数
-    :return: 字符串类型，评论数
-    """
-    return acdb.get_all_comments_num()
-
-
 @app.route('/ways', methods=['GET', 'POST'])
 def rank_or_departments():
     """
     显示所有老师界面，按照部门显示或按照排行榜显示
     接收ajax请求，执行操作
-    :return: 渲染模板片段
+    :return: 渲染Jinja模板片段
     """
     # 获取ajax请求数据
     ways = int(request.form.get('ways'))
@@ -197,8 +194,7 @@ def rank_or_departments():
         return render_template('show_by_departments.html',
                                table=table)
     else:
-        # 为1按照排行榜显示
-        # 获取最新排行榜
+        # 为1按照排行榜显示，获取最新排行榜，仅显示排名前30
         rank = ranking()
         return render_template('show_by_rank.html', rank=rank[:30])
 
@@ -207,7 +203,7 @@ def rank_or_departments():
 def search():
     """
     模糊搜索后端处理
-    :return: 渲染模板
+    :return: 渲染Jinja模板
     """
     global fuzzy_info
     # 获取老师的数据，通过ajax请求的关键词从中进行匹配
@@ -217,7 +213,10 @@ def search():
     tip = request.form.get('tip')
     # 实例化搜索表单
     search_form = SearchForm()
+    # 匹配项列表
     suggestions = []
+    # flag=0表示直接匹配关键词获得的匹配结果
+    # flag=1表示直接匹配汉字没有找到匹配项，得到的是换成拼音查找后的结果
     flag = 0
     if tip:
         # tip为1说明是为提示框提供数据发起的请求
@@ -225,6 +224,7 @@ def search():
         if keyword != '':
             # 当传入的keyword不为空才进行匹配
             suggestions, _ = get_suggestions(keyword, fuzzy_info)
+            # 仅显示前八个匹配项
             return render_template('tip_list.html', suggestions=suggestions[:8])
     else:
         # 点击搜索框按钮
@@ -244,7 +244,8 @@ def search():
                                user_name=session.get('user_name'))
 
 
-# ------------------------以下作为尝试第三方登陆的尝试-------------------------------
+# ------------------------以下是第三方登陆代码-------------------------------
+# 借助oauthlib工具，辅助完成第三方登陆
 oauth = OAuth(app)
 oauth.register(
     name='qq',
@@ -260,7 +261,7 @@ oauth.register(
 def login_page():
     """
     登录界面
-    :return: 渲染模板
+    :return: 渲染Jinja模板
     """
     session['last_url'] = request.referrer
     return render_template('login.html')
@@ -268,6 +269,10 @@ def login_page():
 
 @app.route('/logout')
 def logout():
+    """
+    退出登录
+    :return: 返回原地址
+    """
     session.pop('user_name')
     return redirect_back('/')
 
@@ -353,6 +358,8 @@ def generate_random_str(length=16):
     生成一个指定长度的随机字符串，其中
     string.digits=0123456789
     string.ascii_letters=abcdefghigklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+    :param length: 整型，生成随机字符串的长度
+    :return: 字符串类型，随机生成的字符串
     """
     str_list = [random.choice(string.digits + string.ascii_letters) for _ in range(length)]
     return ''.join(str_list)
@@ -361,7 +368,7 @@ def generate_random_str(length=16):
 def redirect_back(back_url):
     """
     返回触发当前URL的上一个URL
-    :param back_url: 指定的返回URL
+    :param back_url: 字符串类型，指定的返回URL
     :return:
     """
     for target in request.args.get('next'), request.referrer, session['last_url']:
@@ -375,7 +382,7 @@ def redirect_back(back_url):
 def is_safe_url(target):
     """
     判断是否是安全的URL
-    :param target: 要检测的URL
+    :param target: 字符串类型，要检测的URL
     :return: 安全返回True，否则返回False
     """
     ref_url = urlparse(request.host_url)

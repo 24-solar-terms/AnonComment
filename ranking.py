@@ -1,6 +1,6 @@
 from acdb import select_for_ranking
-import numpy as np
 from functools import reduce
+import numpy as np
 
 # 预设定的top30参评最少人数
 m = 30
@@ -11,8 +11,8 @@ c = 0
 def f(t):
     """
     计算每位老师的加权平均分
-    :param t: 每位老师的信息列表
-    :return: 计算完加权平均分后的老师信息列表
+    :param t: 列表类型，每位老师的信息列表
+    :return: 列表类型，计算完加权平均分后的老师信息列表
     """
     # 该老师评分人数
     v = float(t[4])
@@ -27,7 +27,7 @@ def f(t):
 def ranking():
     """
     生成排行榜
-    :return: 排行榜
+    :return: 列表类型，排行榜列表
     """
     global c
     # 获取每位老师信息
@@ -45,7 +45,8 @@ def ranking():
     rank = np.column_stack((rank, wr))
     # 按照公式计算加权平均分
     rank = list(map(f, rank))
-    # 按照加权平均分排序
+    # 按照加权平均分从大到小排序，相等再按照评分人数从大到小排序，相等再按照id从小到达排序
     rank = sorted(rank, key=lambda r: (-float(r[6]), -float(r[4]), float(r[0])))
+    # 返回带有从1编号的排行榜
     return list(enumerate(rank, start=1))
 

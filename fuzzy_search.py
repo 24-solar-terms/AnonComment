@@ -6,7 +6,7 @@ def fuzzy_finder(user_input: str, collection: dict):
     """
     模糊搜索功能函数
     :param user_input: 字符串类型，用户输入的关键词
-    :param collection: 字典类型，key为姓名+拼音如张三zhagnsan，value为一个列表，包含了该老师的必要信息
+    :param collection: 字典类型，key为姓名+拼音+id如张三zhagnsan1，value为一个列表，包含了该老师的必要信息
     :return: 列表类型，符合条件的key列表
     """
     suggestions = []
@@ -18,6 +18,7 @@ def fuzzy_finder(user_input: str, collection: dict):
         match = regex.search(item)
         if match:
             suggestions.append((len(match.group()), match.start(), item))
+
     return [x for _, _, x in sorted(suggestions)]
 
 
@@ -35,6 +36,7 @@ def get_suggestions(keyword: str, info: dict):
     if not suggestions:
         flag = 1
         pinyin = ''
+        # 将关键词转成拼音
         for i in pypinyin.pinyin(keyword, style=pypinyin.NORMAL):
             pinyin += ''.join(i)
         suggestions = fuzzy_finder(pinyin, info)

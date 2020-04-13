@@ -1,8 +1,13 @@
+from textfilter import DFAFilter
 import mysql.connector
 import pandas as pd
 import numpy as np
 import re
-from textfilter import DFAFilter
+
+
+# 创建一个DFA敏感词过滤器
+dfa_filter = DFAFilter()
+dfa_filter.parse('keywords')
 
 
 def init():
@@ -70,6 +75,17 @@ def init():
     db.commit()
 
 
+def get_all_comments_num():
+    """
+    查询全站所有评论数
+    :return: 字符串类型，评论数
+    """
+    sql = "SELECT COUNT(*) FROM comments"
+    cursor.execute(sql)
+    count = cursor.fetchone()
+    return str(count[0])
+
+
 def select_all_teachers():
     """
     查询所有老师
@@ -78,18 +94,21 @@ def select_all_teachers():
     table = {}
     select_sql = "SELECT t_id, name, pinyin, department FROM teachers;"
     cursor.execute(select_sql)
+    # 获取所有老师的信息列表
     teachers = cursor.fetchall()
+    # 生成所有老师的信息字典
     for teacher in teachers:
         if teacher[3] not in table.keys():
             table[teacher[3]] = []
         table[teacher[3]].append(str(teacher[0]) + ' ' + teacher[1] + ' ' + teacher[2])
+
     return table
 
 
 def select_all_teachers_for_search():
     """
     查询所有老师信息，为模糊搜索提供数据
-    :return: 字典类型，key：中文姓名+拼音，如'张三zhangsan'
+    :return: 字典类型，key：中文姓名+拼音+id，如'张三zhangsan1'
                       value: 列表信息，[t_id, name, pinyin, score, department, degree, title]
     """
     info = {}
@@ -102,14 +121,16 @@ def select_all_teachers_for_search():
         # 分数保留两位小数
         teacher[3] = round(teacher[3], 2)
         info[key] = teacher
+
     return info
 
 
 def select_teacher_info(teacher: str):
     """
     查询某位老师的信息和评论
-    :param teacher: 字符串类型，组成为教师id+姓名拼音（没有+号），用于数据库查找该老师的评论
-    :return: 返回列表信息
+    :param teacher: 字符串类型，组成为教师id+姓名拼音（没有+号，如1zhangsan）
+                    用于数据库查找该老师的信息
+    :return: 列表类型，返回列表，该老师的全部信息
     """
     # 将teacher中的t_id利用正则表达式分离出来，以便进行查询
     t_id = int(re.match(r'([0-9]+)([a-z]+)', teacher).group(1))
@@ -118,17 +139,18 @@ def select_teacher_info(teacher: str):
     # 将教师的信息列表化
     info = list(cursor.fetchone())
     if info[11]:
-        # 将教师得分和点名率保留两位小数
+        # 如果有评分，将教师得分和点名率保留两位小数
         info[11] = round(info[11], 2)
         info[13] = round(info[13] * 100.0, 2)
+
     return info
 
 
 def select_comments(t_id: int):
     """
-    根据教师id查询对该老师的评论
+    根据教师id查询对该老师的所有评论
     :param t_id: 整型，教师id
-    :return: 返回comments和count
+    :return: comments和count
              comments：列表类型，每个元素为一条评论的所有信息，包括内容，时间，点赞数等
              count：元组类型，只有一个元素，为某位老师的所有评论数
     """
@@ -136,6 +158,7 @@ def select_comments(t_id: int):
     select_sql = "SELECT * FROM comments WHERE t_id={} ORDER BY support DESC, c_id DESC".format(t_id)
     cursor.execute(select_sql)
     comments = cursor.fetchall()
+    # 获取该老师评论总个数
     select_sql = "SELECT COUNT(*) FROM comments WHERE t_id={}".format(t_id)
     cursor.execute(select_sql)
     count = cursor.fetchone()
@@ -145,7 +168,7 @@ def select_comments(t_id: int):
 def select_for_ranking():
     """
     获取所有老师的列表，为教师排行榜提供数据
-    :return: 老师列表
+    :return: 列表类型，老师列表
     """
     select_sql = "SELECT t_id, name, pinyin, tot_score, num, score FROM teachers"
     cursor.execute(select_sql)
@@ -153,24 +176,13 @@ def select_for_ranking():
     return teachers
 
 
-def get_all_comments_num():
-    """
-    查询全站所有评论数
-    :return: 返回字符串类型的评论数
-    """
-    sql = "SELECT COUNT(*) FROM comments"
-    cursor.execute(sql)
-    count = cursor.fetchone()
-    return str(count[0])
-
-
 def is_commented(openid: str, t_id: int):
     """
-    根据openid和t_id查询用户评论表中是否有记录，没有则说明该用户未对该老师评论，
-    否则评论过了，返回评论
-    :param openid: 用户标识
-    :param t_id: 老师id
-    :return: 如果存在评论则返回评论列表，否则返回None
+    根据openid和t_id查询用户评价表中是否有记录，没有则说明该用户未对该老师评价，
+    否则说明评价过，返回用户评价信息
+    :param openid: 字符串类型，用户标识
+    :param t_id: 整型，老师id
+    :return: 如果存在评价则返回评价列表，否则返回None
     """
     select_sql = "SELECT * FROM user_comments WHERE openid='{}' AND t_id={};".format(openid, t_id)
     cursor.execute(select_sql)
@@ -181,14 +193,29 @@ def is_commented(openid: str, t_id: int):
         return None
 
 
+def get_like_list(openid: str, t_id: int):
+    """
+    根据openid和t_id查询用户对该老师的点赞评论，返回点赞的c_id列表
+    :param openid: 字符串类型，用户的唯一标识
+    :param t_id: 整型，老师id
+    :return: 列表类型，每个元素是一个c_id
+    """
+    sql = "SELECT c_id FROM user_supports WHERE openid='{}' AND t_id={}".format(openid,
+                                                                                t_id)
+    cursor.execute(sql)
+    like_list = cursor.fetchall()
+    like_list = list(map(lambda x: x[0], like_list))
+    return like_list
+
+
 def insert_comment(t_id: int, score: int, whether: int, comment: str, submit_date: str):
     """
     更新老师信息，插入一条新的评论到评论表
-    :param t_id: 教师id
-    :param score: 评论的分数
-    :param whether: 是否点名
-    :param comment: 评论内容
-    :param submit_date: 提交时间
+    :param t_id: 整型，教师id
+    :param score: 整型，评论的分数
+    :param whether: 整型，是否点名
+    :param comment: 字符串类型，评论内容
+    :param submit_date: 字符串类型，提交时间
     :return: c_id
     """
     c_id = None
@@ -198,33 +225,35 @@ def insert_comment(t_id: int, score: int, whether: int, comment: str, submit_dat
     cursor.execute(update_sql)
     if comment != "":
         # 如果评论内容不为空插入一条评论
-        # 创建一个DFA敏感词过滤器
-        dfa_filter = DFAFilter()
-        dfa_filter.parse('keywords')
+        # 对评论进行敏感词过滤
         comment = dfa_filter.filter(comment)
+        # 将评论插入数据库
         insert_sql = "INSERT INTO comments (t_id, content, post_time) VALUES (%s, %s, %s);"
         val = (t_id, comment, submit_date)
         cursor.execute(insert_sql, val)
         # 获取c_id
         cursor.execute("SELECT LAST_INSERT_ID();")
         c_id = cursor.fetchone()[0]
+
     db.commit()
     return c_id
 
 
 def insert_user_comment(openid: str, t_id: int, score: int, whether: int,
-                        comment: str, c_id: int):
+                        comment: str, c_id: 'int or None'):
     """
-    插入新纪录到用户评论表，即标记用户评论了该老师
-    :param openid: 用户唯一标识
-    :param t_id: 评论教师的id
-    :param score: 评分
-    :param whether: 是否点名
-    :param comment: 评论内容
-    :param c_id: 评论id
+    插入新记录到用户评价表，标记用户评价了该老师
+    :param openid: 字符串类型，用户唯一标识
+    :param t_id: 整型，评论教师的id
+    :param score: 整型，评分
+    :param whether: 整型，是否点名
+    :param comment: 字符串类型，评论内容
+    :param c_id: 整型，评论id
     :return: None
     """
     insert_sql = "INSERT INTO user_comments (openid, t_id, score, yes, content, c_id) VALUES (%s, %s, %s, %s, %s, %s)"
+    # 对评论进行敏感词过滤
+    comment = dfa_filter.filter(comment)
     val = (openid, t_id, score, whether, comment, c_id)
     cursor.execute(insert_sql, val)
     db.commit()
@@ -233,27 +262,31 @@ def insert_user_comment(openid: str, t_id: int, score: int, whether: int,
 def update_user_comment(teacher: str, openid: str, score: int, whether: int,
                         comment: str, submit_date: str):
     """
-    用户更新自己对某位老师的评论
+    用户更新自己对某位老师的评价
     :param teacher: 字符串类型，为评论老师的URL路径，如/1zhangsan
     :param openid: 字符串类型，当前用户的唯一标识
-    :param score: int，更新后的评分
-    :param whether: int，更新后的点名情况
-    :param comment: str，更新后的评论
-    :param submit_date: str，更新后的提交日期
+    :param score: 整型，更新后的评分
+    :param whether: 整型，更新后的点名情况
+    :param comment: 字符串类型，更新后的评论
+    :param submit_date: 字符串类型，更新后的提交日期
     :return: None
     """
+    # 根据url的path部分获取t_id
     t_id = int(re.match(r'/([0-9]+)([a-z]+)', teacher).group(1))
+    # 获取用户以前对老师的评价（评分，是否点名，评论，评论的id）
     old_comment = is_commented(openid, t_id)
     old_score = old_comment[3]
     old_whether = old_comment[4]
     c_id = old_comment[6]
+    # 对评论进行敏感词过滤
+    comment = dfa_filter.filter(comment)
     # 更新教师信息
     sql = "UPDATE teachers SET tot_score=tot_score-{}+{}, yes=yes-{}+{}," \
           "score=tot_score/num, percent=yes/num WHERE t_id={};".format(old_score, score,
                                                                        old_whether, whether,
                                                                        t_id)
     cursor.execute(sql)
-    # 更新用户评论表
+    # 更新用户评价表
     sql = "UPDATE user_comments SET score={}, yes={}, content='{}'" \
           "WHERE openid='{}' AND t_id={};".format(score, whether, comment, openid, t_id)
     cursor.execute(sql)
@@ -291,10 +324,10 @@ def update_user_comment(teacher: str, openid: str, score: int, whether: int,
 def update_user_support(openid: str, t_id: int, c_id: int, click: int):
     """
     单条修改点赞记录
-    :param openid: 用户唯一标识字符串
-    :param t_id: 用户点赞评论对应的老师id
-    :param c_id: 点赞的评论id
-    :param click: 点赞1或取消点赞0
+    :param openid: 字符串类型，用户唯一标识字符串
+    :param t_id: 整型，用户点赞评论对应的老师id
+    :param c_id: 整型，点赞的评论id
+    :param click: 整型，点赞1或取消点赞0
     :return: None
     """
     if click:
@@ -312,22 +345,8 @@ def update_user_support(openid: str, t_id: int, c_id: int, click: int):
         # 更新评论表中support字段
         sql = "UPDATE comments SET support=support-1 WHERE c_id={}".format(c_id)
         cursor.execute(sql)
+
     db.commit()
-
-
-def get_like_list(openid: str, t_id: int):
-    """
-    根据openid和t_id查询用户对该老师的点赞评论，返回c_id列表
-    :param openid: 字符串类型，用户的唯一标识
-    :param t_id: int，老师id
-    :return: 列表类型，每个元素是一个c_id
-    """
-    sql = "SELECT c_id FROM user_supports WHERE openid='{}' AND t_id={}".format(openid,
-                                                                                t_id)
-    cursor.execute(sql)
-    like_list = cursor.fetchall()
-    like_list = list(map(lambda x: x[0], like_list))
-    return like_list
 
 
 config = {

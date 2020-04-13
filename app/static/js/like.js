@@ -9,7 +9,7 @@ function like_func() {
             p.css("color", "rgb(253, 54, 104)");
         }
     }
-    /*点击点赞按钮的事件*/
+    /*点击点赞按钮的事件，发送ajax请求，保存到数据库*/
     $(".good").click(function() {
         if($(this).attr("flag") === "0"){
             $(this).attr("flag", "1");

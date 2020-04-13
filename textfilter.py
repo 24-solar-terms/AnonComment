@@ -23,7 +23,7 @@ class DFAFilter(object):
     def add(self, keyword):
         """
         添加一个新的敏感词
-        :param keyword: 敏感词
+        :param keyword: 字符串类型，敏感词
         :return: None
         """
         # 预处理
@@ -61,7 +61,7 @@ class DFAFilter(object):
     def parse(self, path):
         """
         添加某个敏感词词库
-        :param path: 敏感词词库所在路径
+        :param path: 字符串类型，敏感词词库所在路径
         :return: None
         """
         with open(path, encoding='utf-8') as f:
@@ -72,8 +72,8 @@ class DFAFilter(object):
     def filter(self, message, repl="*"):
         """
         敏感词过滤
-        :param message: 将要进行过滤的信息
-        :param repl: 用来替换敏感词的符号，默认为'*'
+        :param message: 字符串类型，将要进行过滤的信息
+        :param repl: 字符类型，用来替换敏感词的符号，默认为'*'
         :return: 字符串类型，过滤后的字符串
         """
         # 首先将字符串转成utf-8

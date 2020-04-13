@@ -1,6 +1,8 @@
 $(function() {
+    /*点击发送ajax请求，获取不同的Jinja模板片段*/
     $("#hot_comments").click(function() {
         if($(this).attr("flag") === "0"){
+            /*设置两按钮互斥*/
             $(this).attr("flag", "1");
             $(this).css("color", "black");
             var newest_comments = $(this).next();
@@ -14,6 +16,7 @@ $(function() {
                     $("#messages").html(data);
                 },
                 complete: function() {
+                    /*重新设置点赞的监听事件*/
                     like_func();
                 }
             });
@@ -21,6 +24,7 @@ $(function() {
     });
     $("#newest_comments").click(function() {
         if($(this).attr("flag") === "0"){
+            /*设置两按钮互斥*/
             $(this).attr("flag", "1");
             $(this).css("color", "black");
             var hot_comments = $(this).prev();
@@ -34,6 +38,7 @@ $(function() {
                     $("#messages").html(data);
                 },
                 complete: function() {
+                    /*重新设置点赞的监听事件*/
                     like_func();
                 }
             });
