@@ -27,9 +27,9 @@
     <div id="item_list">
         {% for item in suggestions %}
         <div class="item">
-            <p style="float: right; font-size: x-large;"><a href="{{item[0]}}{{item[2]}}">{{item[3]}}</a></p>
-            <h3 style="font-weight: 500;"><a href="{{item[0]}}{{item[2]}}">{{item[1]}}</a></h3>
-            <p style="margin: 5px 0;"><a href="{{item[0]}}{{item[2]}}">{{item[4]}} {{item[5]}} {{item[6]}}</a></p>
+            <p style="float: right; font-size: x-large;"><a class="item_click" href="/{{item[0]}}{{item[2]}}">{{item[3]}}</a></p>
+            <h3 style="font-weight: 500;"><a class="item_click" href="/{{item[0]}}{{item[2]}}">{{item[1]}}</a></h3>
+            <p style="margin: 5px 0;"><a class="item_click" href="/{{item[0]}}{{item[2]}}">{{item[4]}} {{item[5]}} {{item[6]}}</a></p>
         </div>
         {% endfor %}
     </div>

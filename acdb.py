@@ -115,6 +115,7 @@ def select_all_teachers_for_search():
     select_sql = "SELECT t_id, name, pinyin, score, department, degree, title  FROM teachers;"
     cursor.execute(select_sql)
     teachers = cursor.fetchall()
+    # 生成所有老师的信息字典
     for teacher in teachers:
         key = teacher[1] + teacher[2] + str(teacher[0])
         teacher = list(teacher)
@@ -271,7 +272,7 @@ def update_user_comment(teacher: str, openid: str, score: int, whether: int,
     :param submit_date: 字符串类型，更新后的提交日期
     :return: None
     """
-    # 根据url的path部分获取t_id
+    # 根据URL的path部分获取t_id
     t_id = int(re.match(r'/([0-9]+)([a-z]+)', teacher).group(1))
     # 获取用户以前对老师的评价（评分，是否点名，评论，评论的id）
     old_comment = is_commented(openid, t_id)

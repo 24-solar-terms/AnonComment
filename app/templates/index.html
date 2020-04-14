@@ -13,16 +13,15 @@
 </div>
 <!--搜索框-->
 <div class="search">
-    <form action="/search" method="post">
-        {{search_form.hidden_tag()}}
+    <form action="/search" method="get">
         <table>
             <tr>
                 <td>
-                    {{search_form.search_bar}}
+                    <input type="text" name="search_bar" id="search_bar" autocomplete="off">
                     <div class="search_tip_box"></div>
                 </td>
                 <td>
-                    {{search_form.search_button}}
+                    <input type="submit" name="search_button" id="search_button" value="查一下">
                 </td>
             </tr>
         </table>

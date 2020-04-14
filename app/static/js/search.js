@@ -6,8 +6,11 @@ $(function () {
         if(val !== "") {
             $.ajax({
                 url: '/search',
-                data: {'tip': '1', 'keyword': val},
-                type: 'POST',
+                data: {
+                        'tip': '1',
+                        'keyword': val
+                      },
+                type: 'GET',
                 success: function(data) {
                     /*成功获得数据后显示提示框*/
                     $(".search_tip_box").css("display", "block");

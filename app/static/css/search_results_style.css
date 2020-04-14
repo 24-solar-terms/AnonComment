@@ -24,3 +24,19 @@
     width: 50%;
     border-bottom: 1px dashed rgb(0, 132, 255);
 }
+
+.item_click:link {
+    color: blue;
+}
+
+.item_click:visited {
+    color: blue;
+}
+
+.item_click:hover {
+    color: blue;
+}
+
+.item_click:active {
+    color: blue;
+}

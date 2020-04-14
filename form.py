@@ -3,18 +3,6 @@ from wtforms import SelectField, RadioField, TextAreaField, DateField, SubmitFie
 from wtforms.validators import InputRequired, NumberRange
 
 
-class SearchForm(FlaskForm):
-    """
-    文字域： 搜索内容框
-    提交按钮： 提交
-    """
-    search_bar = StringField(validators=[InputRequired()],
-                             render_kw={'id': 'search_bar',
-                                        'autocomplete': 'off'})
-    search_button = SubmitField(render_kw={'id': 'search_button',
-                                           'value': '查一下'})
-
-
 class CommentForm(FlaskForm):
     """
     下拉列表：选择分数

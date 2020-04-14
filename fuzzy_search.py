@@ -10,7 +10,7 @@ def fuzzy_finder(user_input: str, collection: dict):
     :return: 列表类型，符合条件的key列表
     """
     suggestions = []
-    user_input = user_input.replace("'", '')
+    user_input = user_input.replace("'", '').lower()
     # 将 'djm' 转换为 'd.*?j.*?m'
     pattern = '.*?'.join(user_input)
     regex = re.compile(pattern)
