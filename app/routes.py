@@ -1,16 +1,16 @@
 from app import app
 from flask import render_template, redirect, request, session, url_for
+from authlib.integrations.flask_client import OAuth
+from urllib.parse import urlparse, parse_qsl, urlsplit, urljoin, unquote
 from form import CommentForm
 from ranking import ranking
 from fuzzy_search import get_suggestions
-from authlib.integrations.flask_client import OAuth
-from urllib.parse import urlparse, parse_qsl, urlsplit, urljoin, unquote
-import acdb
 import requests
 import random
 import string
 import json
 import re
+import acdb
 
 
 # table字典的key值表示部门，value值是一个列表，每个元素是一位老师的信息
@@ -140,7 +140,7 @@ def save_user_support():
     return "success"
 
 
-@app.route('/rank', methods=['GET', 'POST'])
+@app.route('/rank')
 def rank_by():
     """
     该函数处理每位老师评论的显示方式，按照最热评论和最新评论显示
@@ -148,7 +148,7 @@ def rank_by():
     :return: 渲染Jinja模板片段
     """
     # 获取前端请求
-    way = int(request.form.get('way'))
+    way = int(parse_qsl(urlparse(request.url).query)[0][1])
     # 这里必须重新请求数据库中的数据，防止数据不一致
     teacher = str(urlparse(request.referrer).path)
     t_id = int(re.match(r'/([0-9]+)([a-z]+)', teacher).group(1))
@@ -171,7 +171,7 @@ def rank_by():
                                user_name=session.get('user_name'))
 
 
-@app.route('/ways', methods=['GET', 'POST'])
+@app.route('/ways')
 def rank_or_departments():
     """
     显示所有老师界面，按照部门显示或按照排行榜显示
@@ -179,7 +179,7 @@ def rank_or_departments():
     :return: 渲染Jinja模板片段
     """
     # 获取Ajax请求数据
-    ways = int(request.form.get('ways'))
+    ways = int(parse_qsl(urlparse(request.url).query)[0][1])
     if not ways:
         # 为0按照部门显示
         return render_template('show_by_departments.html',
@@ -292,11 +292,13 @@ def authorize():
     }
     # 请求地址
     url = 'https://graph.qq.com/oauth2.0/authorize'
-    # 发起请求
-    requests.get(url=url, params=data_dict)
-    # 获取code
-    auth_code = dict(parse_qsl(urlsplit(request.url).query))['code']
-    # print('Authorization Code: {}'.format(auth_code))
+    try:
+        # 发起请求
+        requests.get(url=url, params=data_dict)
+        # 获取code
+        auth_code = dict(parse_qsl(urlsplit(request.url).query))['code']
+    except Exception as e:
+        print('获取Authorization Code失败：\n{}'.format(e))
 
     # 通过Authorization Code获取Access Token
     # 请求参数
@@ -309,20 +311,24 @@ def authorize():
     }
     # 请求地址
     url = 'https://graph.qq.com/oauth2.0/token'
-    # 请求并获取Access Token
-    response = requests.get(url=url, params=data_dict)
-    access_token = dict(parse_qsl(response.text))['access_token']
-    # print('Access Token: {}'.format(access_token))
+    try:
+        # 请求并获取Access Token
+        response = requests.get(url=url, params=data_dict)
+        access_token = dict(parse_qsl(response.text))['access_token']
+    except Exception as e:
+        print('获取Access Token失败：\n{}'.format(e))
 
     # 通过Access Token获取openID
     # 请求参数
     data_dict = {'access_token': access_token}
     # 请求地址
     url = 'https://graph.qq.com/oauth2.0/me'
-    # 发起请求，获得数据
-    response = requests.get(url=url, params=data_dict)
-    openid = json.loads(response.text[10:-3])['openid']
-    # print('openID: {}'.format(openid))
+    try:
+        # 发起请求，获得数据
+        response = requests.get(url=url, params=data_dict)
+        openid = json.loads(response.text[10:-3])['openid']
+    except Exception as e:
+        print('获取openID失败：\n{}'.format(e))
 
     # 获取用户信息
     data_dict = {
@@ -331,13 +337,14 @@ def authorize():
         'openid': openid
     }
     url = 'https://graph.qq.com/user/get_user_info'
-    response = requests.get(url=url, params=data_dict)
-    user_data = json.loads(response.text)
-    # print(json.loads(response.text))
-
-    # 保存用户信息到session
-    session['user_name'] = user_data['nickname']
-    session['openid'] = openid
+    try:
+        response = requests.get(url=url, params=data_dict)
+        user_data = json.loads(response.text)
+        # 保存用户信息到session
+        session['user_name'] = user_data['nickname']
+        session['openid'] = openid
+    except Exception as e:
+        print('获取用户信息失败：\n{}'.format(e))
 
     return redirect_back('/')
 

@@ -11,7 +11,7 @@ $(function() {
             $.ajax({
                 url: '/rank',
                 data: {'way': '0'},
-                type: 'POST',
+                type: 'GET',
                 success: function(data) {
                     $("#messages").html(data);
                 },
@@ -33,7 +33,7 @@ $(function() {
             $.ajax({
                 url: '/rank',
                 data: {'way': '1'},
-                type: 'POST',
+                type: 'GET',
                 success: function(data) {
                     $("#messages").html(data);
                 },

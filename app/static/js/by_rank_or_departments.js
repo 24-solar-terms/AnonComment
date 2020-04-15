@@ -7,7 +7,7 @@ $(function() {
             $("#by_rank").attr("flag", "0");
             $.ajax({
                 url: '/ways',
-                type: 'POST',
+                type: 'GET',
                 data: {'ways': '0'},
                 success: function(data) {
                     $("#show_teachers").html(data);
@@ -22,7 +22,7 @@ $(function() {
             $("#by_depart").attr("flag", "0");
             $.ajax({
                 url: '/ways',
-                type: 'POST',
+                type: 'GET',
                 data: {'ways': '1'},
                 success: function(data) {
                     $("#show_teachers").html(data);
