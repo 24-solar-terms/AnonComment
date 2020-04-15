@@ -238,8 +238,6 @@ def search():
 oauth = OAuth(app)
 oauth.register(
     name='qq',
-    client_id='101860705',
-    client_secret='78e232c1b0cb6ca59b84b3173a2869e5',
     access_token_url='https://graph.qq.com/oauth2.0/token',
     authorize_url='https://graph.qq.com/oauth2.0/authorize',
     api_base_url='https://graph.qq.com'
@@ -286,8 +284,8 @@ def authorize():
     # 请求参数
     data_dict = {
         'response_type': 'code',
-        'client_id': '101860705',
-        'redirect_uri': 'http://127.0.0.1:5000/authorize',
+        'client_id': app.config.get('QQ_CLIENT_ID'),
+        'redirect_uri': app.config.get('REDIRECT_URI'),
         'state': generate_random_str(24)
     }
     # 请求地址
@@ -304,9 +302,9 @@ def authorize():
     # 请求参数
     data_dict = {
         'grant_type': 'authorization_code',
-        'client_id': '101860705',
-        'client_secret': '78e232c1b0cb6ca59b84b3173a2869e5',
-        'redirect_uri': 'http://127.0.0.1:5000/authorize',
+        'client_id': app.config.get('QQ_CLIENT_ID'),
+        'client_secret': app.config.get('QQ_CLIENT_SECRET'),
+        'redirect_uri': app.config.get('REDIRECT_URI'),
         'code': auth_code
     }
     # 请求地址
@@ -333,7 +331,7 @@ def authorize():
     # 获取用户信息
     data_dict = {
         'access_token': access_token,
-        'oauth_consumer_key': '101860705',
+        'oauth_consumer_key': app.config.get('QQ_CLIENT_ID'),
         'openid': openid
     }
     url = 'https://graph.qq.com/user/get_user_info'
