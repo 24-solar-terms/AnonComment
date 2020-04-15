@@ -1,4 +1,5 @@
 from app import app
+from app import acdb
 from flask import render_template, redirect, request, session, url_for
 from authlib.integrations.flask_client import OAuth
 from urllib.parse import urlparse, parse_qsl, urlsplit, urljoin, unquote
@@ -10,7 +11,6 @@ import random
 import string
 import json
 import re
-import acdb
 
 
 # table字典的key值表示部门，value值是一个列表，每个元素是一位老师的信息
@@ -186,7 +186,8 @@ def rank_or_departments():
                                table=table)
     else:
         # 为1按照排行榜显示，获取最新排行榜，仅显示排名前30
-        rank = ranking()
+        teachers = acdb.select_for_ranking()
+        rank = ranking(teachers)
         return render_template('show_by_rank.html', rank=rank[:30])
 
 

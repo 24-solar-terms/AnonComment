@@ -1,4 +1,3 @@
-from acdb import select_for_ranking
 from functools import reduce
 import numpy as np
 
@@ -24,14 +23,14 @@ def f(t):
     return list(t)
 
 
-def ranking():
+def ranking(teachers: list):
     """
-    生成排行榜
+    生成教师排行榜
+    :param teachers: 列表类型，每位老师信息列表
     :return: 列表类型，排行榜列表
     """
     global c
     # 获取每位老师信息
-    teachers = select_for_ranking()
     rank = np.array(teachers)
     # 获取每位老师的总分数列表和评分人数列表
     tot_score_list = rank[:, 3]
