@@ -4,17 +4,17 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
     CSRF_ENABLED = True
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'UAEecJL6HlmG7xRgrphWhQkJuSVaywxz'
-    QQ_CLIENT_ID = '101860705'
-    QQ_CLIENT_SECRET = '78e232c1b0cb6ca59b84b3173a2869e5'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or '****'
+    QQ_CLIENT_ID = '****'
+    QQ_CLIENT_SECRET = '****'
 
 
 class DevelopmentConfig(Config):
     DEBUG = True
     DATABASE = {
                 'host': 'localhost',
-                'user': 'root',
-                'passwd': 'guyu980324',
+                'user': '****',
+                'passwd': '****',
                 'database': 'acdb',
                 'charset': 'utf8'
                }

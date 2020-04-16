@@ -1,3 +1,4 @@
+
 class DFAFilter(object):
     """
     基于DFA的敏感词过滤器

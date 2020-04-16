@@ -1,15 +1,13 @@
-from app import app
-from app import acdb
+from . import main
+from .. import acdb
+from .. import oauth
+from .. import qq
 from flask import render_template, redirect, request, session, url_for
-from authlib.integrations.flask_client import OAuth
-from urllib.parse import urlparse, parse_qsl, urlsplit, urljoin, unquote
-from form import CommentForm
-from ranking import ranking
-from fuzzy_search import get_suggestions
-import requests
-import random
-import string
-import json
+from urllib.parse import urlparse, parse_qsl, unquote
+from .forms import CommentForm
+from ..tools.ranking import ranking
+from ..tools.fuzzy_search import get_suggestions
+from ..tools.url_tools import redirect_back
 import re
 
 
@@ -19,8 +17,8 @@ table = {}
 fuzzy_info = {}
 
 
-@app.route('/')
-@app.route('/index')
+@main.route('/')
+@main.route('/index')
 def index():
     """
     匿名评教首页
@@ -34,7 +32,7 @@ def index():
                            user_name=session.get('user_name'))
 
 
-@app.route('/teachers')
+@main.route('/teachers')
 def show_all_teachers():
     """
     显示所有老师界面
@@ -53,7 +51,7 @@ def show_all_teachers():
                            user_name=session.get('user_name'))
 
 
-@app.route('/<teacher>', methods=['GET', 'POST'])
+@main.route('/<teacher>', methods=['GET', 'POST'])
 def show_teacher(teacher: str):
     """
     显示每位老师具体信息的界面，包括老师信息和相关评价
@@ -96,7 +94,7 @@ def show_teacher(teacher: str):
                            user_name=session.get('user_name'))
 
 
-@app.route('/update_user_comment', methods=['GET', 'POST'])
+@main.route('/update_user_comment', methods=['GET', 'POST'])
 def update_user_comment():
     """
     用户修改对某位老师的评价
@@ -121,7 +119,7 @@ def update_user_comment():
     return render_template('comment_form.html', form=submit_form)
 
 
-@app.route('/save_user_support')
+@main.route('/save_user_support')
 def save_user_support():
     """
     传入点赞状态，并存入数据库
@@ -140,7 +138,7 @@ def save_user_support():
     return "success"
 
 
-@app.route('/rank')
+@main.route('/rank')
 def rank_by():
     """
     该函数处理每位老师评论的显示方式，按照最热评论和最新评论显示
@@ -171,7 +169,7 @@ def rank_by():
                                user_name=session.get('user_name'))
 
 
-@app.route('/ways')
+@main.route('/ways')
 def rank_or_departments():
     """
     显示所有老师界面，按照部门显示或按照排行榜显示
@@ -191,7 +189,7 @@ def rank_or_departments():
         return render_template('show_by_rank.html', rank=rank[:30])
 
 
-@app.route('/search')
+@main.route('/search')
 def search():
     """
     模糊搜索后端处理
@@ -235,17 +233,7 @@ def search():
 
 
 # ------------------------以下是第三方登陆代码-------------------------------
-# 借助oauthlib工具，辅助完成第三方登陆
-oauth = OAuth(app)
-oauth.register(
-    name='qq',
-    access_token_url='https://graph.qq.com/oauth2.0/token',
-    authorize_url='https://graph.qq.com/oauth2.0/authorize',
-    api_base_url='https://graph.qq.com'
-)
-
-
-@app.route('/login')
+@main.route('/login')
 def login_page():
     """
     登录界面
@@ -255,7 +243,7 @@ def login_page():
     return render_template('login.html')
 
 
-@app.route('/logout')
+@main.route('/logout')
 def logout():
     """
     退出登录
@@ -265,121 +253,25 @@ def logout():
     return redirect_back('/')
 
 
-@app.route('/qqlogin')
+@main.route('/qqlogin')
 def login():
     """
     登录跳转
     :return: 重定向到QQ登陆授权
     """
-    redirect_uri = url_for('authorize', _external=True)
+    redirect_uri = url_for('.authorize', _external=True)
     return oauth.qq.authorize_redirect(redirect_uri)
 
 
-@app.route('/authorize')
+@main.route('/authorize')
 def authorize():
     """
     授权回调处理
     :return: 授权成功后返回登录之前的界面
     """
-    # 请求获取Authorization Code
-    # 请求参数
-    data_dict = {
-        'response_type': 'code',
-        'client_id': app.config.get('QQ_CLIENT_ID'),
-        'redirect_uri': app.config.get('REDIRECT_URI'),
-        'state': generate_random_str(24)
-    }
-    # 请求地址
-    url = 'https://graph.qq.com/oauth2.0/authorize'
-    try:
-        # 发起请求
-        requests.get(url=url, params=data_dict)
-        # 获取code
-        auth_code = dict(parse_qsl(urlsplit(request.url).query))['code']
-    except Exception as e:
-        print('获取Authorization Code失败：\n{}'.format(e))
-
-    # 通过Authorization Code获取Access Token
-    # 请求参数
-    data_dict = {
-        'grant_type': 'authorization_code',
-        'client_id': app.config.get('QQ_CLIENT_ID'),
-        'client_secret': app.config.get('QQ_CLIENT_SECRET'),
-        'redirect_uri': app.config.get('REDIRECT_URI'),
-        'code': auth_code
-    }
-    # 请求地址
-    url = 'https://graph.qq.com/oauth2.0/token'
-    try:
-        # 请求并获取Access Token
-        response = requests.get(url=url, params=data_dict)
-        access_token = dict(parse_qsl(response.text))['access_token']
-    except Exception as e:
-        print('获取Access Token失败：\n{}'.format(e))
-
-    # 通过Access Token获取openID
-    # 请求参数
-    data_dict = {'access_token': access_token}
-    # 请求地址
-    url = 'https://graph.qq.com/oauth2.0/me'
-    try:
-        # 发起请求，获得数据
-        response = requests.get(url=url, params=data_dict)
-        openid = json.loads(response.text[10:-3])['openid']
-    except Exception as e:
-        print('获取openID失败：\n{}'.format(e))
-
-    # 获取用户信息
-    data_dict = {
-        'access_token': access_token,
-        'oauth_consumer_key': app.config.get('QQ_CLIENT_ID'),
-        'openid': openid
-    }
-    url = 'https://graph.qq.com/user/get_user_info'
-    try:
-        response = requests.get(url=url, params=data_dict)
-        user_data = json.loads(response.text)
-        # 保存用户信息到session
-        session['user_name'] = user_data['nickname']
-        session['openid'] = openid
-    except Exception as e:
-        print('获取用户信息失败：\n{}'.format(e))
-
+    # 获得用户信息和用户唯一标识openID
+    user_data, openid = qq.get_user_info()
+    # 保存用户信息到session
+    session['user_name'] = user_data['nickname']
+    session['openid'] = openid
     return redirect_back('/')
-
-
-def generate_random_str(length=16):
-    """
-    生成一个指定长度的随机字符串，其中
-    string.digits=0123456789
-    string.ascii_letters=abcdefghigklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
-    :param length: 整型，生成随机字符串的长度
-    :return: 字符串类型，随机生成的字符串
-    """
-    str_list = [random.choice(string.digits + string.ascii_letters) for _ in range(length)]
-    return ''.join(str_list)
-
-
-def redirect_back(back_url):
-    """
-    返回触发当前URL的上一个URL
-    :param back_url: 字符串类型，指定的返回URL
-    :return:
-    """
-    for target in request.args.get('next'), request.referrer, session['last_url']:
-        if not target:
-            continue
-        if is_safe_url(target):
-            return redirect(target)
-    return redirect(back_url)
-
-
-def is_safe_url(target):
-    """
-    判断是否是安全的URL
-    :param target: 字符串类型，要检测的URL
-    :return: 安全返回True，否则返回False
-    """
-    ref_url = urlparse(request.host_url)
-    test_url = urlparse(urljoin(request.host_url, target))
-    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc

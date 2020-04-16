@@ -1,10 +1,11 @@
 from contextlib import contextmanager
-from textfilter import DFAFilter
+from .textfilter import DFAFilter
 import mysql.connector
 import mysql.connector.pooling
 import pandas as pd
 import numpy as np
 import re
+import os
 
 
 class AnonCommentDatabase:
@@ -12,10 +13,24 @@ class AnonCommentDatabase:
     MySQL数据库操作类
     """
 
-    def __init__(self, app):
+    def __init__(self):
         """
-        初始化数据库操作类，包括获取数据库配置，建立数据库连接池，创建敏感词过滤器
-        :param app: WEB应用实例
+        初始化数据库操作类，定义数据库的配置字典，定义数据库连接池，创建敏感词过滤器
+        """
+        # 数据库的配置字典
+        self.config = {}
+        # 数据库连接池
+        self.connections_pool = None
+        # 创建DFA敏感词过滤器
+        basedir = os.path.abspath(os.path.dirname(__file__))
+        self.dfa_filter = DFAFilter()
+        self.dfa_filter.parse(os.path.join(basedir, 'keywords'))
+
+    def init_app(self, app):
+        """
+        通过应用实例初始化数据库操作类
+        :param app: 应用实例
+        :return: None
         """
         # 获取数据库配置
         self.config = app.config.get('DATABASE')
@@ -27,9 +42,6 @@ class AnonCommentDatabase:
         except Exception as ex:
             print('创建数据库连接池发生异常：\n{}'.format(ex))
             self.connections_pool = None
-        # 创建DFA敏感词过滤器
-        self.dfa_filter = DFAFilter()
-        self.dfa_filter.parse('keywords')
 
     @contextmanager
     def open_mysql(self):
