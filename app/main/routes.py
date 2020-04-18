@@ -2,19 +2,14 @@ from . import main
 from .. import acdb
 from .. import oauth
 from .. import qq
+from .. import mc
 from flask import render_template, redirect, request, session, url_for
-from urllib.parse import urlparse, parse_qsl, unquote
+from urllib.parse import urlparse
 from .forms import CommentForm
 from ..tools.ranking import ranking
 from ..tools.fuzzy_search import get_suggestions
 from ..tools.url_tools import redirect_back
 import re
-
-
-# table字典的key值表示部门，value值是一个列表，每个元素是一位老师的信息
-table = {}
-# 模糊搜索时需要的老师数据信息
-fuzzy_info = {}
 
 
 @main.route('/')
@@ -40,11 +35,15 @@ def show_all_teachers():
     2. 按照排行榜显示
     :return: 渲染Jinja模板
     """
-    # 使用全局教师table信息
-    global table
-    # 如果为空就调用数据库接口获取全部教师
-    if not table:
+    # table字典的key值表示部门，value值是一个列表，每个元素是一位老师的信息
+    if mc.get('table'):
+        # 如果memcached中缓存了教师表直接从memcached中获取
+        table = mc.get('table')
+    else:
+        # 否则查询数据库，并且存入缓存，设置过期时间永久
         table = acdb.select_all_teachers()
+        mc.set('table', table)
+
     return render_template('teachers.html',
                            title='所有老师',
                            table=table,
@@ -179,6 +178,14 @@ def rank_or_departments():
     ways = int(request.args.get('ways'))
     if not ways:
         # 为0按照部门显示
+        if mc.get('table'):
+            # 如果memcached中缓存了教师表直接从memcached中获取
+            table = mc.get('table')
+        else:
+            # 否则查询数据库，并存入缓存，设置过期时间永久
+            table = acdb.select_all_teachers()
+            mc.set('table', table)
+
         return render_template('show_by_departments.html',
                                table=table)
     else:
@@ -194,10 +201,14 @@ def search():
     模糊搜索后端处理
     :return: 渲染Jinja模板
     """
-    global fuzzy_info
     # 获取老师的数据，通过Ajax请求的关键词从中进行匹配
-    if not fuzzy_info:
+    if mc.get('fuzzy_info'):
+        # memcached缓存中存在则直接获取
+        fuzzy_info = mc.get('fuzzy_info')
+    else:
+        # 缓存中没有读取数据库，并存入缓存，设置过期时间5分钟
         fuzzy_info = acdb.select_all_teachers_for_search()
+        mc.set('fuzzy_info', fuzzy_info, time=60*5)
 
     if request.args.get('tip'):
         # tip存在说明是为提示框提供数据发起的请求

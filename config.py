@@ -19,11 +19,13 @@ class DevelopmentConfig(Config):
                 'charset': 'utf8'
                }
     REDIRECT_URI = 'http://127.0.0.1:5000/authorize'
+    MEMCACHED_SERVER = ["127.0.0.1:11211"]
 
 
 class ProductionConfig(Config):
     DATABASE = {}
     REDIRECT_URI = ''
+    MEMCACHED_SERVER = []
 
 
 config = {

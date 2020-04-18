@@ -3,6 +3,7 @@ from config import config
 from .tools.ac_database import AnonCommentDatabase
 from .tools.qq_login_tool import QQLogin
 from authlib.integrations.flask_client import OAuth
+import memcache
 
 # 创建数据库操作类实例
 acdb = AnonCommentDatabase()
@@ -10,6 +11,8 @@ acdb = AnonCommentDatabase()
 oauth = OAuth()
 # 创建QQ登录辅助类
 qq = QQLogin()
+# 创建memcached实例
+mc = memcache.Client(["127.0.0.1:11211"])
 
 
 def create_app(config_name):
@@ -38,6 +41,9 @@ def create_app(config_name):
 
     # 配置初始化QQ登录辅助类
     qq.init_app(app)
+
+    # 设置memcached服务器
+    mc.set_servers(app.config.get('MEMCACHED_SERVER'))
 
     # 注册主蓝本
     from .main import main as main_blueprint

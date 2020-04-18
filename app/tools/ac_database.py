@@ -155,7 +155,7 @@ class AnonCommentDatabase:
         with self.open_mysql() as db:
             cursor = db.cursor()
             count = None
-            sql = "SELECT COUNT(*) FROM comments"
+            sql = "SELECT COUNT(*) FROM comments;"
             try:
                 cursor.execute(sql)
                 count = cursor.fetchone()
@@ -233,7 +233,7 @@ class AnonCommentDatabase:
             info = []
             # 将teacher中的t_id利用正则表达式分离出来，以便进行查询
             t_id = int(re.match(r'([0-9]+)([a-z]+)', teacher).group(1))
-            select_sql = "SELECT * FROM teachers WHERE t_id={}".format(t_id)
+            select_sql = "SELECT * FROM teachers WHERE t_id={};".format(t_id)
             try:
                 cursor.execute(select_sql)
                 # 将教师的信息列表化
@@ -263,11 +263,11 @@ class AnonCommentDatabase:
             count = ()
             try:
                 # 默认按照点赞数排序获取评论
-                select_sql = "SELECT * FROM comments WHERE t_id={} ORDER BY support DESC, c_id DESC".format(t_id)
+                select_sql = "SELECT * FROM comments WHERE t_id={} ORDER BY support DESC, c_id DESC;".format(t_id)
                 cursor.execute(select_sql)
                 comments = cursor.fetchall()
                 # 获取该老师评论总个数
-                select_sql = "SELECT COUNT(*) FROM comments WHERE t_id={}".format(t_id)
+                select_sql = "SELECT COUNT(*) FROM comments WHERE t_id={};".format(t_id)
                 cursor.execute(select_sql)
                 count = cursor.fetchone()
             except Exception as e:
@@ -285,7 +285,7 @@ class AnonCommentDatabase:
         with self.open_mysql() as db:
             cursor = db.cursor()
             teachers = []
-            select_sql = "SELECT t_id, name, pinyin, tot_score, num, score FROM teachers"
+            select_sql = "SELECT t_id, name, pinyin, tot_score, num, score FROM teachers;"
             try:
                 cursor.execute(select_sql)
                 teachers = cursor.fetchall()
@@ -331,7 +331,7 @@ class AnonCommentDatabase:
         with self.open_mysql() as db:
             cursor = db.cursor()
             like_list = []
-            sql = "SELECT c_id FROM user_supports WHERE openid='{}' AND t_id={}".format(openid,
+            sql = "SELECT c_id FROM user_supports WHERE openid='{}' AND t_id={};".format(openid,
                                                                                         t_id)
             try:
                 cursor.execute(sql)
@@ -395,7 +395,7 @@ class AnonCommentDatabase:
         """
         with self.open_mysql() as db:
             cursor = db.cursor()
-            insert_sql = "INSERT INTO user_comments (openid, t_id, score, yes, content, c_id) VALUES (%s, %s, %s, %s, %s, %s)"
+            insert_sql = "INSERT INTO user_comments (openid, t_id, score, yes, content, c_id) VALUES (%s, %s, %s, %s, %s, %s);"
             # 对评论进行敏感词过滤
             comment = self.dfa_filter.filter(comment)
             val = (openid, t_id, score, whether, comment, c_id)
@@ -457,13 +457,15 @@ class AnonCommentDatabase:
                     cursor.execute(sql)
                 # 原来有评论，现在也有评论
                 elif c_id and comment != "":
-                    sql = "UPDATE comments SET content='{}' WHERE c_id={};".format(comment, c_id)
+                    sql = "UPDATE comments SET content='{}', post_time='{}' WHERE c_id={};".format(comment,
+                                                                                                   submit_date,
+                                                                                                   c_id)
                     cursor.execute(sql)
                 # 原来有评论，现在无评论
                 elif c_id and comment == "":
-                    sql = "DELETE FROM comments WHERE c_id={}".format(c_id)
+                    sql = "DELETE FROM comments WHERE c_id={};".format(c_id)
                     cursor.execute(sql)
-                    sql = "DELETE FROM user_supports WHERE c_id={}".format(c_id)
+                    sql = "DELETE FROM user_supports WHERE c_id={};".format(c_id)
                     cursor.execute(sql)
                     sql = "UPDATE user_comments SET c_id=NULL WHERE openid='{}' AND t_id={};".format(openid,
                                                                                                      t_id)
@@ -489,18 +491,18 @@ class AnonCommentDatabase:
             try:
                 if click:
                     # 更新用户点赞表
-                    sql = "INSERT INTO user_supports (openid, c_id, t_id) VALUES (%s, %s, %s)"
+                    sql = "INSERT INTO user_supports (openid, c_id, t_id) VALUES (%s, %s, %s);"
                     val = (openid, c_id, t_id)
                     cursor.execute(sql, val)
                     # 更新评论表中support字段
-                    sql = "UPDATE comments SET support=support+1 WHERE c_id={}".format(c_id)
+                    sql = "UPDATE comments SET support=support+1 WHERE c_id={};".format(c_id)
                     cursor.execute(sql)
                 else:
                     # 更新用户点赞表
-                    sql = "DELETE FROM user_supports WHERE openid='{}' AND c_id={}".format(openid, c_id)
+                    sql = "DELETE FROM user_supports WHERE openid='{}' AND c_id={};".format(openid, c_id)
                     cursor.execute(sql)
                     # 更新评论表中support字段
-                    sql = "UPDATE comments SET support=support-1 WHERE c_id={}".format(c_id)
+                    sql = "UPDATE comments SET support=support-1 WHERE c_id={};".format(c_id)
                     cursor.execute(sql)
 
                 db.commit()
