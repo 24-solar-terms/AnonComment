@@ -125,14 +125,13 @@ def save_user_support():
     传入点赞状态，并存入数据库
     :return: 字符串类型，成功状态字符串
     """
-    # 通过GET方式从URL中获得传入的点赞状态数据字典，key为c_id，value为点赞1或取消点赞0
-    like_state = dict(parse_qsl(unquote(urlparse(request.url).query)))
     # 获取必要信息
     openid = session.get('openid')
     teacher = str(urlparse(request.referrer).path)
     t_id = int(re.match(r'/([0-9]+)([a-z]+)', teacher).group(1))
-    c_id = int(like_state['c_id'])
-    click = int(like_state['click'])
+    # 获取GET请求数据
+    c_id = int(request.args.get('c_id'))
+    click = int(request.args.get('click'))
     # 执行数据库操作
     acdb.update_user_support(openid, t_id, c_id, click)
     return "success"
@@ -146,7 +145,7 @@ def rank_by():
     :return: 渲染Jinja模板片段
     """
     # 获取前端请求
-    way = int(parse_qsl(urlparse(request.url).query)[0][1])
+    way = int(request.args.get('way'))
     # 这里必须重新请求数据库中的数据，防止数据不一致
     teacher = str(urlparse(request.referrer).path)
     t_id = int(re.match(r'/([0-9]+)([a-z]+)', teacher).group(1))
@@ -177,7 +176,7 @@ def rank_or_departments():
     :return: 渲染Jinja模板片段
     """
     # 获取Ajax请求数据
-    ways = int(parse_qsl(urlparse(request.url).query)[0][1])
+    ways = int(request.args.get('ways'))
     if not ways:
         # 为0按照部门显示
         return render_template('show_by_departments.html',
@@ -199,12 +198,11 @@ def search():
     # 获取老师的数据，通过Ajax请求的关键词从中进行匹配
     if not fuzzy_info:
         fuzzy_info = acdb.select_all_teachers_for_search()
-    # 从URL中获取GET请求数据
-    request_data = dict(parse_qsl(urlparse(request.url).query))
 
-    if 'tip' in request_data:
-        # tip是request_data的key说明是为提示框提供数据发起的请求
-        keyword = request_data['keyword']
+    if request.args.get('tip'):
+        # tip存在说明是为提示框提供数据发起的请求
+        keyword = request.args.get('keyword')
+
         if keyword != '':
             # 当传入的keyword不为空才进行匹配
             suggestions, _ = get_suggestions(keyword, fuzzy_info)
@@ -212,12 +210,12 @@ def search():
             return render_template('tip_list.html', suggestions=suggestions[:8])
     else:
         # 点击搜索框按钮
-        # 如果没有输入任何东西直接搜索那么search_bar不是request_data的key
+        # 如果没有输入任何东西直接搜索那么search_bar为None
         # 此时直接返回首页
-        if 'search_bar' not in request_data:
+        if not request.args.get('search_bar'):
             return redirect('/')
         # 否则进行模糊匹配
-        keyword = request_data['search_bar']
+        keyword = request.args.get('search_bar')
         session['keyword'] = keyword + ' '
         # flag=0表示直接匹配关键词获得的匹配结果
         # flag=1表示直接匹配汉字没有找到匹配项，得到的是换成拼音查找后的结果
