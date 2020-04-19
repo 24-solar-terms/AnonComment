@@ -457,16 +457,22 @@ class AnonCommentDatabase:
                     cursor.execute(sql)
                 # 原来有评论，现在也有评论
                 elif c_id and comment != "":
-                    sql = "UPDATE comments SET content='{}', post_time='{}' WHERE c_id={};".format(comment,
-                                                                                                   submit_date,
-                                                                                                   c_id)
+                    # 更新评论表的评论内容，提交时间，获赞数清零
+                    sql = "UPDATE comments SET content='{}', post_time='{}', support=0 " \
+                          "WHERE c_id={};".format(comment, submit_date, c_id)
+                    cursor.execute(sql)
+                    # 删除用户对该评论的相关点赞记录
+                    sql = "DELETE FROM user_supports WHERE c_id={};".format(c_id)
                     cursor.execute(sql)
                 # 原来有评论，现在无评论
                 elif c_id and comment == "":
+                    # 删除评论表评论
                     sql = "DELETE FROM comments WHERE c_id={};".format(c_id)
                     cursor.execute(sql)
+                    # 删除用户对该评论的点赞记录
                     sql = "DELETE FROM user_supports WHERE c_id={};".format(c_id)
                     cursor.execute(sql)
+                    # 更新用户评论表
                     sql = "UPDATE user_comments SET c_id=NULL WHERE openid='{}' AND t_id={};".format(openid,
                                                                                                      t_id)
                     cursor.execute(sql)
