@@ -99,13 +99,13 @@ body {
 
 #content {
     width: 100%;
-    min-height: calc(100% - 145px);
+    min-height: calc(100% - 200px);
     height: auto;
 }
 
 #footer {
     width: 100%;
-    height: 100px;
+    height: 155px;
     text-align: center;
     position: relative;
 }
