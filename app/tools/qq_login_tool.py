@@ -21,6 +21,7 @@ class QQLogin:
         self.client_id = ''
         self.client_secret = ''
         self.redirect_uri = ''
+        self.manager_openid = ''
 
     def init_app(self, app):
         """
@@ -31,6 +32,7 @@ class QQLogin:
         self.client_id = app.config.get('QQ_CLIENT_ID')
         self.client_secret = app.config.get('QQ_CLIENT_SECRET')
         self.redirect_uri = app.config.get('REDIRECT_URI')
+        self.manager_openid = app.config.get('MANAGER_OPENID')
 
     def get_auth_code(self):
         """
@@ -106,6 +108,11 @@ class QQLogin:
         """
         # 获取openid，同时可以获得access token
         openid, access_token = self.get_openid()
+        # 判断是否是管理员
+        if openid == self.manager_openid:
+            manager = 1
+        else:
+            manager = 0
         # 请求参数
         data_dict = {
             'access_token': access_token,
@@ -118,4 +125,4 @@ class QQLogin:
         except Exception as e:
             print('获取用户信息失败：\n{}'.format(e))
 
-        return user_data, openid
+        return user_data, openid, manager

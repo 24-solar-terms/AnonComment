@@ -6,7 +6,10 @@
     <div id="user">
         <a id="user_name">{{user_name}}</a>
         <div id="dropdown">
-            <a id="quit" href="/logout">退出</a>
+            {% if manager %}
+            <a class="dropdown_item" href="/management">管理界面</a>
+            {% endif %}
+            <a class="dropdown_item" href="/logout">退出</a>
         </div>
     </div>
     {% else %}

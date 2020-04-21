@@ -16,8 +16,10 @@ $(function() {
                     $("#messages").html(data);
                 },
                 complete: function() {
-                    /*重新设置点赞的监听事件*/
+                    /*重新设置点赞，删除，举报的监听事件*/
                     like_func();
+                    listen_delete_comments();
+                    listen_report_comments();
                 }
             });
         }
@@ -38,8 +40,10 @@ $(function() {
                     $("#messages").html(data);
                 },
                 complete: function() {
-                    /*重新设置点赞的监听事件*/
+                    /*重新设置点赞，删除，举报的监听事件*/
                     like_func();
+                    listen_delete_comments();
+                    listen_report_comments();
                 }
             });
         }

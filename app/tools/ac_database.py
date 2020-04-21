@@ -127,11 +127,24 @@ class AnonCommentDatabase:
                                                  "openid VARCHAR(50) NOT NULL," \
                                                  "c_id INT NOT NULL," \
                                                  "t_id INT NOT NULL);"
+
+                create_reports_table_sql = "CREATE TABLE reports (" \
+                                           "c_id INT NOT NULL PRIMARY KEY," \
+                                           "num INT NOT NULL," \
+                                           "content VARCHAR(300) NOT NULL);"
+
+                create_user_reports_table_sql = "CREATE TABLE user_reports (" \
+                                                "id INT NOT NULL AUTO_INCREMENT PRIMARY KEY," \
+                                                "openid VARCHAR(50) NOT NULL," \
+                                                "c_id INT NOT NULL," \
+                                                "t_id INT NOT NULL);"
                 try:
                     cursor.execute(create_teachers_table_sql)
                     cursor.execute(create_comments_table_sql)
                     cursor.execute(create_user_comments_table_sql)
                     cursor.execute(create_user_supports_table_sql)
+                    cursor.execute(create_reports_table_sql)
+                    cursor.execute(create_user_reports_table_sql)
 
                     # 获取老师信息并插入表
                     with open('./app/static/data/data.csv', 'rb') as f:
@@ -332,7 +345,7 @@ class AnonCommentDatabase:
             cursor = db.cursor()
             like_list = []
             sql = "SELECT c_id FROM user_supports WHERE openid='{}' AND t_id={};".format(openid,
-                                                                                        t_id)
+                                                                                         t_id)
             try:
                 cursor.execute(sql)
                 like_list = cursor.fetchall()
@@ -343,6 +356,48 @@ class AnonCommentDatabase:
                 db.rollback()
 
         return like_list
+
+    def get_report_list(self, openid: str, t_id: int):
+        """
+        根据openid和t_id查询用户对该老师的举报评论，返回举报的c_id列表
+        :param openid: 字符串类型，用户的唯一标识
+        :param t_id: 整型，老师id
+        :return: 列表类型，每个元素是一个c_id
+        """
+        with self.open_mysql() as db:
+            cursor = db.cursor()
+            report_list = []
+            sql = "SELECT c_id FROM user_reports WHERE openid='{}' AND t_id={};".format(openid,
+                                                                                        t_id)
+            try:
+                cursor.execute(sql)
+                report_list = cursor.fetchall()
+                report_list = list(map(lambda x: x[0], report_list))
+            except Exception as e:
+                print('发生异常：\n{}'.format(e))
+                # 发生异常则回滚
+                db.rollback()
+
+        return report_list
+
+    def get_reported_comments(self):
+        """
+        根据被举报过的评论id获取评论
+        :return: 列表类型，每个元素是个元组，元组第一个元素是c_id，第二个是举报次数，第三个是评论内容
+        """
+        with self.open_mysql() as db:
+            cursor = db.cursor()
+            sql = "SELECT * FROM reports;"
+            reported_comments = []
+            try:
+                cursor.execute(sql)
+                reported_comments = cursor.fetchall()
+            except Exception as e:
+                print('发生异常：\n{}'.format(e))
+                # 发生异常则回滚
+                db.rollback()
+
+        return sorted(reported_comments, key=lambda r: (-int(r[1]), int(r[0])))
 
     def insert_comment(self, t_id: int, score: int, whether: int, comment: str, submit_date: str):
         """
@@ -476,6 +531,11 @@ class AnonCommentDatabase:
                     sql = "UPDATE user_comments SET c_id=NULL WHERE openid='{}' AND t_id={};".format(openid,
                                                                                                      t_id)
                     cursor.execute(sql)
+                    # 删除举报表和用户举报表
+                    sql = "DELETE FROM reports WHERE c_id={};".format(c_id)
+                    cursor.execute(sql)
+                    sql = "DELETE FROM user_reports WHERE c_id={};".format(c_id)
+                    cursor.execute(sql)
 
                 db.commit()
             except Exception as e:
@@ -511,6 +571,87 @@ class AnonCommentDatabase:
                     sql = "UPDATE comments SET support=support-1 WHERE c_id={};".format(c_id)
                     cursor.execute(sql)
 
+                db.commit()
+            except Exception as e:
+                print('发生异常：\n{}'.format(e))
+                # 发生异常则回滚
+                db.rollback()
+
+    def delete_comment(self, c_id: int):
+        """
+        删除一条评论，同时删除对该评论的点赞，更新用户评论表
+        :param c_id: 整型，评论id
+        :return: None
+        """
+        with self.open_mysql() as db:
+            cursor = db.cursor()
+            try:
+                # 删除评论表中的评论
+                sql = "DELETE FROM comments WHERE c_id={};".format(c_id)
+                cursor.execute(sql)
+                # 删除该评论的点赞记录
+                sql = "DELETE FROM user_supports WHERE c_id={};".format(c_id)
+                cursor.execute(sql)
+                # 更新用户评论表
+                sql = "UPDATE user_comments SET content='您的评论已被管理员删除', c_id=NULL WHERE c_id={};".format(c_id)
+                cursor.execute(sql)
+                # 删除举报表和用户举报表
+                sql = "DELETE FROM reports WHERE c_id={};".format(c_id)
+                cursor.execute(sql)
+                sql = "DELETE FROM user_reports WHERE c_id={};".format(c_id)
+                cursor.execute(sql)
+                db.commit()
+            except Exception as e:
+                print('发生异常：\n{}'.format(e))
+                # 发生异常则回滚
+                db.rollback()
+                raise Exception('删除评论失败')
+
+    def insert_report(self, openid: str, c_id: int, t_id: int):
+        """
+        用户举报评论，在用户举报表和举报表插入记录
+        用户举报表是用来记录用户已经举报过该评论，不可重复举报
+        举报表用来表示某条评论被举报了，并记录举报次数
+        :param openid: 字符串类型，用户唯一标识
+        :param c_id: 整型，评论id
+        :param t_id: 整型，教师id
+        :return: None
+        """
+        with self.open_mysql() as db:
+            cursor = db.cursor()
+            try:
+                # 在用户举报表中插入一条记录
+                sql = "INSERT INTO user_reports (openid, c_id, t_id) VALUES (%s, %s, %s);"
+                val = (openid, c_id, t_id)
+                cursor.execute(sql, val)
+                # 根据c_id获取评论内容
+                sql = "SELECT content FROM comments WHERE c_id={};".format(c_id)
+                cursor.execute(sql)
+                cont = cursor.fetchone()[0]
+                # 如果c_id在举报表中不存在，插入新记录，存在则举报次数加1
+                sql = "INSERT INTO reports (c_id, num, content) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE num=num+1;"
+                val = (c_id, 1, cont)
+                cursor.execute(sql, val)
+                db.commit()
+            except Exception as e:
+                print('发生异常：\n{}'.format(e))
+                # 发生异常则回滚
+                db.rollback()
+                raise Exception('举报评论失败')
+
+    def ignore_reported_comment(self, c_id: int):
+        """
+        将评论在举报表中删除，在用户举报表中删除
+        :param c_id:
+        :return:
+        """
+        with self.open_mysql() as db:
+            cursor = db.cursor()
+            try:
+                sql = "DELETE FROM reports WHERE c_id={};".format(c_id)
+                cursor.execute(sql)
+                sql = "DELETE FROM user_reports WHERE c_id={};".format(c_id)
+                cursor.execute(sql)
                 db.commit()
             except Exception as e:
                 print('发生异常：\n{}'.format(e))

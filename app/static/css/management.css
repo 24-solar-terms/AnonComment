@@ -1,0 +1,27 @@
+#report_table {
+    margin: 0 auto;
+    width: 80%;
+    border: 1px solid darkgray;
+    text-align: center;
+    border-collapse: collapse;
+}
+
+#report_table th {
+    border: 1px solid darkgray;
+}
+
+#report_table td {
+    border: 1px solid darkgray;
+}
+
+.comment_content {
+    width: 80%;
+}
+
+.delete:hover {
+    color: #136CB2;
+}
+
+.ignore:hover {
+    color: #136CB2;
+}

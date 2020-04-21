@@ -3,13 +3,15 @@ from .. import acdb
 from .. import oauth
 from .. import qq
 from .. import mc
-from flask import render_template, redirect, request, session, url_for
+from flask import render_template, redirect, request, session, url_for, send_from_directory
 from urllib.parse import urlparse
 from .forms import CommentForm
 from ..tools.ranking import ranking
 from ..tools.fuzzy_search import get_suggestions
 from ..tools.url_tools import redirect_back
+import pandas as pd
 import re
+import os
 
 
 @main.route('/')
@@ -24,7 +26,8 @@ def index():
     return render_template('index.html',
                            title='匿名评教',
                            tot_comments_num=tot_comments_num,
-                           user_name=session.get('user_name'))
+                           user_name=session.get('user_name'),
+                           manager=session.get('manager'))
 
 
 @main.route('/teachers')
@@ -47,7 +50,8 @@ def show_all_teachers():
     return render_template('teachers.html',
                            title='所有老师',
                            table=table,
-                           user_name=session.get('user_name'))
+                           user_name=session.get('user_name'),
+                           manager=session.get('manager'))
 
 
 @main.route('/<teacher>', methods=['GET', 'POST'])
@@ -64,8 +68,16 @@ def show_teacher(teacher: str):
     comments, count = acdb.select_comments(info[0])
     # 查询该用户是否对该老师有评价（包括评分，是否点名，评论）
     user_comment = acdb.is_commented(session.get('openid'), info[0])
-    # 查询获取用户对该老师评论的点赞情况
-    like_comments = acdb.get_like_list(session.get('openid'), info[0])
+
+    like_comments = None
+    report_list = None
+    if session.get('user_name'):
+        # 当用户登录后
+        # 查询获取用户对该老师评论的点赞情况
+        like_comments = acdb.get_like_list(session.get('openid'), info[0])
+        # 查询获取用户对该老师评论的举报情况
+        report_list = acdb.get_report_list(session.get('openid'), info[0])
+
     # 实例化一个评价提交表单, 第一次评价该老师时使用
     submit_form = CommentForm()
     # 评论表单提交验证
@@ -90,7 +102,9 @@ def show_teacher(teacher: str):
                            comments=comments,
                            user_comment=user_comment,
                            like_comments=like_comments,
-                           user_name=session.get('user_name'))
+                           report_comments=report_list,
+                           user_name=session.get('user_name'),
+                           manager=session.get('manager'))
 
 
 @main.route('/update_user_comment', methods=['GET', 'POST'])
@@ -133,7 +147,7 @@ def save_user_support():
     click = int(request.args.get('click'))
     # 执行数据库操作
     acdb.update_user_support(openid, t_id, c_id, click)
-    return "success"
+    return ""
 
 
 @main.route('/rank')
@@ -150,21 +164,34 @@ def rank_by():
     t_id = int(re.match(r'/([0-9]+)([a-z]+)', teacher).group(1))
     # 获取该老师的评论，个数，以及该用户点赞评论的id列表
     comments, count = acdb.select_comments(t_id)
-    like_comments = acdb.get_like_list(session.get('openid'), t_id)
+
+    like_comments = None
+    report_list = None
+    if session.get('user_name'):
+        # 当用户登录后
+        # 查询获取用户对该老师评论的点赞情况
+        like_comments = acdb.get_like_list(session.get('openid'), t_id)
+        # 查询获取用户对该老师评论的举报情况
+        report_list = acdb.get_report_list(session.get('openid'), t_id)
+
     if not way:
         # 为0按照最热评论显示
         return render_template('show_comments.html',
                                count=count[0],
                                comments=comments,
                                like_comments=like_comments,
-                               user_name=session.get('user_name'))
+                               report_comments=report_list,
+                               user_name=session.get('user_name'),
+                               manager=session.get('manager'))
     else:
         # 为1按照最新评论显示，以c_id排序
         return render_template('show_comments.html',
                                count=count[0],
                                comments=sorted(comments, key=lambda t: t[0], reverse=True),
                                like_comments=like_comments,
-                               user_name=session.get('user_name'))
+                               user_name=session.get('user_name'),
+                               report_comments=report_list,
+                               manager=session.get('manager'))
 
 
 @main.route('/ways')
@@ -238,7 +265,83 @@ def search():
                                results_num=len(suggestions),
                                suggestions=suggestions,
                                flag=flag,
-                               user_name=session.get('user_name'))
+                               user_name=session.get('user_name'),
+                               manager=session.get('manager'))
+
+
+@main.route('/delete')
+def delete_comments():
+    """
+    管理员删除评论操作
+    :return: 字符串类型，成功返回"delete succeed!"，失败返回"delete failed!"
+    """
+    c_id = int(request.args.get('c_id'))
+    try:
+        acdb.delete_comment(c_id)
+        return "delete succeed!"
+    except Exception as e:
+        print('删除评论失败，返回失败字符串\n{}'.format(e))
+        return "delete failed!"
+
+
+@main.route('/report')
+def report_comments():
+    """
+    用户举报评论，更新数据库
+    :return: 字符串类型，成功返回"report succeed!"，失败返回"report failed!"
+    """
+    # 获取必要信息
+    openid = session.get('openid')
+    teacher = str(urlparse(request.referrer).path)
+    t_id = int(re.match(r'/([0-9]+)([a-z]+)', teacher).group(1))
+    # 获取GET请求数据
+    c_id = int(request.args.get('c_id'))
+    try:
+        acdb.insert_report(openid, c_id, t_id)
+        return "report succeed!"
+    except Exception as e:
+        print("举报失败，返回失败字符串\n{}".format(e))
+        return "report failed!"
+
+
+@main.route('/ignore')
+def ignore_comments():
+    # 获取GET请求数据
+    c_id = int(request.args.get('c_id'))
+    try:
+        acdb.ignore_reported_comment(c_id)
+        return "ignore succeed!"
+    except Exception as e:
+        print("忽略失败，返回失败字符串\n{}".format(e))
+        return "ignore failed!"
+
+
+@main.route('/download')
+def download():
+    """
+    生成教师评分数据文件，并返回下载文件
+    :return: csv教师数据文件
+    """
+    download_dir_path = os.path.abspath(os.path.dirname(__file__))
+    # 获取教师评分数据
+    teachers = acdb.select_for_ranking()
+    data = ranking(teachers)
+    data = list(map(lambda x: x[1], data))
+    # 将数据保存成csv
+    data_frame = pd.DataFrame(data=data)
+    file_path = os.path.join(download_dir_path, 'data.csv')
+    data_frame.to_csv(file_path, encoding='utf-8')
+    # 返回文件
+    return send_from_directory(download_dir_path, 'data.csv', as_attachment=True)
+
+
+@main.route('/management')
+def management():
+    reported_comments = acdb.get_reported_comments()
+    return render_template('management.html',
+                           reported_comments=reported_comments,
+                           user_name=session.get('user_name'),
+                           manager=session.get('manager'))
 
 
 # ------------------------以下是第三方登陆代码-------------------------------
@@ -279,8 +382,12 @@ def authorize():
     :return: 授权成功后返回登录之前的界面
     """
     # 获得用户信息和用户唯一标识openID
-    user_data, openid = qq.get_user_info()
+    user_data, openid, manager = qq.get_user_info()
     # 保存用户信息到session
     session['user_name'] = user_data['nickname']
     session['openid'] = openid
+    # 判断是否是管理员
+    if manager:
+        session['manager'] = manager
+
     return redirect_back('/')

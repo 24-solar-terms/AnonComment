@@ -182,3 +182,11 @@
     color: gray;
     cursor: pointer;
 }
+
+.delete:hover {
+    color: #136CB2;
+}
+
+.report:hover {
+    color: #136CB2;
+}

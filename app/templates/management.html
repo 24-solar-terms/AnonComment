@@ -1,0 +1,37 @@
+{% extends 'base2.html' %}
+
+{% block resources %}
+{{super()}}
+<link rel="stylesheet" type="text/css" href="../static/css/management.css">
+<script src="../static/js/management.js"></script>
+{% endblock %}
+
+{% block nav_content %}
+{{super()}}
+{% endblock %}
+
+{% block main_content %}
+<!--下载教师评分结果csv-->
+<div style="padding-top: 10px; padding-bottom: 10px;">
+    <a style="margin-left: 10%;" href="{{url_for('.download')}}">下载教师评分数据</a>
+</div>
+<!--管理举报评论-->
+<div>
+    <table id="report_table">
+        <tr>
+            <th>评论内容</th>
+            <th>举报次数</th>
+            <th>删除</th>
+            <th>忽略</th>
+        </tr>
+        {% for comment in reported_comments %}
+        <tr class="reported_comment">
+            <td class="comment_content">{{comment[2]}}</td>
+            <td>{{comment[1]}}</td>
+            <td><p style="display: none;">{{comment[0]}}</p><p class="delete" style="display: inline; cursor: pointer;">删除</p></td>
+            <td><p style="display: none;">{{comment[0]}}</p><p class="ignore" style="display: inline; cursor: pointer;">忽略</p></td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

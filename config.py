@@ -7,6 +7,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or '****'
     QQ_CLIENT_ID = '****'
     QQ_CLIENT_SECRET = '****'
+    MANAGER_OPENID = '****'
 
 
 class DevelopmentConfig(Config):

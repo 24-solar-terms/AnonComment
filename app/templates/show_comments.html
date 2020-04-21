@@ -10,7 +10,17 @@
                 </div>
                 <div class="post_footer">
                     <p style="display: inline;">发布于 {{comment[4]}}</p>
-                    <p style="display: inline;">举报</p>
+                    {% if user_name %}
+                        {% if comment[0] in report_comments %}
+                        <p class="report" style="display: inline; cursor: pointer;" flag="1">举报</p>
+                        {% else %}
+                        <p class="report" style="display: inline; cursor: pointer;" flag="0">举报</p>
+                        {% endif %}
+                    <p style="display: none">{{comment[0]}}</p>
+                        {% if manager %}
+                        <p class="delete" style="display: inline; cursor: pointer;">删除</p>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
             <div class="right">
