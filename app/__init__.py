@@ -42,9 +42,6 @@ def create_app(config_name):
     # 配置初始化QQ登录辅助类
     qq.init_app(app)
 
-    # 设置memcached服务器
-    mc.set_servers(app.config.get('MEMCACHED_SERVER'))
-
     # 注册主蓝本
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
