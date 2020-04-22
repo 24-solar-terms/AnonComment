@@ -36,8 +36,12 @@ def ranking(teachers: list):
     tot_score_list = rank[:, 3]
     tot_num_list = rank[:, 4]
     # 计算全局平均分
-    c = (reduce(lambda x, y: x + y, map(lambda x: float(x), tot_score_list)) /
-         reduce(lambda x, y: x + y, map(lambda x: float(x), tot_num_list)))
+    try:
+        c = (reduce(lambda x, y: x + y, map(lambda x: float(x), tot_score_list)) /
+             reduce(lambda x, y: x + y, map(lambda x: float(x), tot_num_list)))
+    except ZeroDivisionError as e:
+        print('除零错误，说明目前没有任何人评论\n{}'.format(e))
+        c = 0
     # 初始化加权平均分
     wr = np.zeros(rank.shape[0])
     # 将每位老师的信息和加权平均分合并
@@ -48,4 +52,3 @@ def ranking(teachers: list):
     rank = sorted(rank, key=lambda r: (-float(r[6]), -float(r[4]), float(r[0])))
     # 返回带有从1编号的排行榜
     return list(enumerate(rank, start=1))
-

@@ -139,6 +139,7 @@ class AnonCommentDatabase:
                                                 "c_id INT NOT NULL," \
                                                 "t_id INT NOT NULL);"
                 try:
+                    cursor.execute('USE acdb')
                     cursor.execute(create_teachers_table_sql)
                     cursor.execute(create_comments_table_sql)
                     cursor.execute(create_user_comments_table_sql)
@@ -147,12 +148,13 @@ class AnonCommentDatabase:
                     cursor.execute(create_user_reports_table_sql)
 
                     # 获取老师信息并插入表
-                    with open('./app/static/data/data.csv', 'rb') as f:
+                    basedir = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+                    data_path = os.path.join(basedir, 'static/data/data.csv')
+                    with open(data_path, 'rb') as f:
                         pd_data = pd.read_csv(f, header=None, encoding='gb18030', keep_default_na=False)
 
                     data = np.array(pd_data)
                     insert_data = list((tuple(i) for i in data))
-                    cursor.execute('USE acdb')
                     cursor.executemany(insert_teachers_table_sql, insert_data)
                     db.commit()
                 except Exception as e:
@@ -605,6 +607,7 @@ class AnonCommentDatabase:
                 print('发生异常：\n{}'.format(e))
                 # 发生异常则回滚
                 db.rollback()
+                db.close()
                 raise Exception('删除评论失败')
 
     def insert_report(self, openid: str, c_id: int, t_id: int):
@@ -637,6 +640,7 @@ class AnonCommentDatabase:
                 print('发生异常：\n{}'.format(e))
                 # 发生异常则回滚
                 db.rollback()
+                db.close()
                 raise Exception('举报评论失败')
 
     def ignore_reported_comment(self, c_id: int):
@@ -657,3 +661,5 @@ class AnonCommentDatabase:
                 print('发生异常：\n{}'.format(e))
                 # 发生异常则回滚
                 db.rollback()
+                db.close()
+                raise Exception('忽略评论失败')

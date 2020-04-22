@@ -66,13 +66,15 @@ def show_teacher(teacher: str):
     info = acdb.select_teacher_info(teacher)
     # 获取该老师的所有评论和评论个数
     comments, count = acdb.select_comments(info[0])
-    # 查询该用户是否对该老师有评价（包括评分，是否点名，评论）
-    user_comment = acdb.is_commented(session.get('openid'), info[0])
 
+    user_comment = None
     like_comments = None
     report_list = None
+
     if session.get('user_name'):
         # 当用户登录后
+        # 查询该用户是否对该老师有评价（包括评分，是否点名，评论）
+        user_comment = acdb.is_commented(session.get('openid'), info[0])
         # 查询获取用户对该老师评论的点赞情况
         like_comments = acdb.get_like_list(session.get('openid'), info[0])
         # 查询获取用户对该老师评论的举报情况
@@ -167,6 +169,7 @@ def rank_by():
 
     like_comments = None
     report_list = None
+
     if session.get('user_name'):
         # 当用户登录后
         # 查询获取用户对该老师评论的点赞情况
@@ -189,8 +192,8 @@ def rank_by():
                                count=count[0],
                                comments=sorted(comments, key=lambda t: t[0], reverse=True),
                                like_comments=like_comments,
-                               user_name=session.get('user_name'),
                                report_comments=report_list,
+                               user_name=session.get('user_name'),
                                manager=session.get('manager'))
 
 
@@ -217,8 +220,13 @@ def rank_or_departments():
                                table=table)
     else:
         # 为1按照排行榜显示，获取最新排行榜，仅显示排名前30
-        teachers = acdb.select_for_ranking()
-        rank = ranking(teachers)
+        if mc.get('rank'):
+            rank = mc.get('rank')
+        else:
+            teachers = acdb.select_for_ranking()
+            rank = ranking(teachers)
+            mc.set('rank', rank, time=60)
+
         return render_template('show_by_rank.html', rank=rank[:30])
 
 
@@ -338,10 +346,13 @@ def download():
 @main.route('/management')
 def management():
     reported_comments = acdb.get_reported_comments()
-    return render_template('management.html',
-                           reported_comments=reported_comments,
-                           user_name=session.get('user_name'),
-                           manager=session.get('manager'))
+    if session.get('manager'):
+        return render_template('management.html',
+                               reported_comments=reported_comments,
+                               user_name=session.get('user_name'),
+                               manager=session.get('manager'))
+    else:
+        return '<h1>您不是管理员，不可查看该界面</h1>'
 
 
 # ------------------------以下是第三方登陆代码-------------------------------
@@ -362,6 +373,9 @@ def logout():
     :return: 返回原地址
     """
     session.pop('user_name')
+    session.pop('openid')
+    if session.get('manager'):
+        session.pop('manager')
     return redirect_back('/')
 
 

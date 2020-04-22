@@ -42,7 +42,7 @@ function listen_report_comments() {
                             report_button.attr("flag", "1");
                         }
                         else {
-                            alert("举报失败");
+                            alert("举报失败，可能该评论已经被管理员删除，刷新一下试试？");
                         }
                     }
             });
