@@ -419,6 +419,7 @@ class AnonCommentDatabase:
                 update_sql = "UPDATE teachers SET tot_score=tot_score+{}, num=num+1, yes=yes+{}," \
                              "score=tot_score/num, percent=yes/num WHERE t_id={};".format(score, whether, t_id)
                 cursor.execute(update_sql)
+                comment = comment.strip()
                 if comment != "":
                     # 如果评论内容不为空插入一条评论
                     # 对评论进行敏感词过滤
@@ -453,6 +454,7 @@ class AnonCommentDatabase:
         with self.open_mysql() as db:
             cursor = db.cursor()
             insert_sql = "INSERT INTO user_comments (openid, t_id, score, yes, content, c_id) VALUES (%s, %s, %s, %s, %s, %s);"
+            comment = comment.strip()
             # 对评论进行敏感词过滤
             comment = self.dfa_filter.filter(comment)
             val = (openid, t_id, score, whether, comment, c_id)
@@ -486,6 +488,7 @@ class AnonCommentDatabase:
                 old_score = old_comment[3]
                 old_whether = old_comment[4]
                 c_id = old_comment[6]
+                comment = comment.strip()
                 # 对评论进行敏感词过滤
                 comment = self.dfa_filter.filter(comment)
                 # 更新教师信息
