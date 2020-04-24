@@ -1,4 +1,4 @@
-$(function() {
+function listen_text_num() {
     /*文本框获取焦点显示剩余和输入字数，失去焦点不显示*/
     $("#comment_bar").focus(function() {
         $("#text-count-tip").css("visibility", "visible");
@@ -16,4 +16,8 @@ $(function() {
         count = 300 - $this.val().length;
         $("#text-count").text(count);
     });
+}
+
+$(function() {
+    listen_text_num();
 });

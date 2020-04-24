@@ -49,6 +49,8 @@ $(function() {
                             $('input:radio').eq(1).attr('checked', 'true');
                         }
                         $("#comment_bar").val(comment);
+                        /*监听文本框剩余可输入字数*/
+                        listen_text_num();
                         /*设置点击事件*/
                         $("#submit").click(check);
                     }
